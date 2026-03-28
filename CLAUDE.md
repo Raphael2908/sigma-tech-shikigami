@@ -312,6 +312,14 @@ pythonasync def run_compliance(form_path: str):
 
     print(json.dumps(output, indent=2))
 
+Implementation notes:
+- CLI: python run.py [form_path] (defaults to sample_form.json)
+- Checks graph_meta for seeded flag before calling seed_graph (avoids redundant file parse)
+- Skips semantic_diff call entirely when no changed nodes
+- Returns output dict in addition to printing (testable)
+- No top-level error handling for MVP — failures surface as tracebacks
+- End-to-end tested: seeding → canary → extraction → diff → form fill all working
+
 Phase 9 — Local Repair (404 handling)
 Goal: Add 404 repair to layer 2 after the main fan-out.
 Tell Claude Code:
