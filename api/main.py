@@ -106,7 +106,7 @@ async def run_pipeline(req: PipelineRequest = PipelineRequest()):
     filled_pdf_path = await fill_pdf(PDF_SRC, pipeline_output["fields"], PDF_DST)
     pdf_url = await upload_to_github(filled_pdf_path)
     autofill_result = await run_autofill(
-        "http://localhost:3000/portal/form", pipeline_output, pdf_url,
+        "https://mock-website-delta.vercel.app/", pipeline_output, pdf_url,
     )
     pipeline_output["autofill"] = autofill_result
 
@@ -170,7 +170,7 @@ async def stream_pipeline(req: PipelineRequest = PipelineRequest()):
 
         yield {"event": "progress", "data": json.dumps({"step": "autofill", "message": "TinyFish autofilling portal"})}
         autofill_result = await run_autofill(
-            "http://localhost:3000/portal/form", pipeline_output, pdf_url,
+            "https://mock-website-delta.vercel.app/", pipeline_output, pdf_url,
         )
         pipeline_output["autofill"] = autofill_result
 

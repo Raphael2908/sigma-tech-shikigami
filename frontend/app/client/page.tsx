@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import Sidebar from "@/components/Sidebar";
 import type { Payload, ChangeItem, ReasoningItem } from "@/lib/api";
 import { uploadFiles, streamBrowse, streamConsolidate } from "@/lib/api";
@@ -348,7 +348,7 @@ function ConsolidationStep({
   uploadedFields: any[];
   changes: ChangeItem[];
   changeUploads: Record<number, { filename: string; fields: any[] }>;
-  onComplete: (pdfUrl: string) => void;
+  onComplete: (pdfUrl: string, items: ReasoningItem[]) => void;
 }) {
   const [reasoningLog, setReasoningLog] = useState<ReasoningItem[]>([]);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -430,7 +430,7 @@ function ConsolidationStep({
             )}
             <span>{reasoningLog.length} fields consolidated</span>
           </div>
-          <button onClick={() => onComplete(pdfUrl || "")}
+          <button onClick={() => onComplete(pdfUrl || "", reasoningLog)}
             className="px-4 py-[11px] rounded-[10px] font-semibold text-[13px] bg-[#171717] text-white">
             Continue to Simulate Fill
           </button>
@@ -442,45 +442,139 @@ function ConsolidationStep({
 
 /* ── Step 04: Portal Sim (unchanged) ─────────────────────────── */
 
-function PortalStep({ fill, filledValues, logs }: { fill: Payload["fill"]; filledValues: string[]; logs: string[] }) {
+function PortalStep({ fill, filledValues, logs, currentPage }: { fill: [string, string][]; filledValues: string[]; logs: string[]; currentPage: number }) {
+  const logEndRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { logEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [logs.length]);
+
+  const urlMap: Record<number, string> = {
+    0: "mock-website-delta.vercel.app/",
+    1: "mock-website-delta.vercel.app/",
+    2: "mock-website-delta.vercel.app/intermediary.html",
+    3: "mock-website-delta.vercel.app/form.html",
+    4: "mock-website-delta.vercel.app/review.html",
+  };
+
   return (
     <div className="grid grid-cols-[1fr_300px] gap-3.5">
       <div className="bg-[var(--panel)] border border-[var(--line)] rounded-2xl overflow-hidden">
+        {/* Browser chrome */}
         <div className="flex items-center gap-2 px-3 py-2.5 bg-[#f1f1f1] border-b border-[#dadada]">
           <span className="w-[9px] h-[9px] rounded-full bg-[#ff5f57]" />
           <span className="w-[9px] h-[9px] rounded-full bg-[#febc2e]" />
           <span className="w-[9px] h-[9px] rounded-full bg-[#28c840]" />
-          <div className="flex-1 bg-white border border-[#d8d8d8] rounded-lg px-2.5 py-1.5 font-mono text-[11px] font-medium text-[#666]">
-            www.acra.gov.sg/approved-liquidators/withdrawal
+          <div className="flex-1 bg-white border border-[#d8d8d8] rounded-lg px-2.5 py-1.5 font-mono text-[11px] font-medium text-[#666] transition-all">
+            {urlMap[currentPage] || urlMap[0]}
           </div>
         </div>
-        <div className="p-[18px]">
-          <h3 className="text-lg text-[#003d7c] font-semibold mb-1">Withdrawal from Approved Liquidators</h3>
-          <p className="text-xs text-[#666] mb-3.5">Simulation only. Values projected from reviewed extraction output.</p>
-          {fill.map(([label, value], i) => (
-            <div key={label} className="grid grid-cols-[190px_1fr] gap-2.5 py-[9px] border-b border-[#ececec] last:border-b-0">
-              <div className="text-[13px] text-[var(--muted)]">{label}</div>
-              <div className={`min-h-[30px] border rounded-lg px-2.5 py-[7px] text-[13px] ${
-                filledValues[i] === "" ? "bg-[#fafafa] border-[#d7d7d7]"
-                : filledValues[i] === value ? "bg-[rgba(43,122,97,0.06)] border-[var(--ok)]"
-                : "bg-[rgba(14,165,233,0.08)] border-[#0ea5e9]"
-              }`}>
-                {filledValues[i]}
+
+        <div className="p-[18px] min-h-[380px]">
+          {/* Page 1: Landing */}
+          {currentPage === 1 && (
+            <div>
+              <h3 className="text-lg text-[#003d7c] font-semibold mb-3">BizFile+ Online Filing</h3>
+              <p className="text-xs text-[#666] mb-4">Popular services</p>
+              <div className="border border-[#ece5d8] rounded-xl p-4 bg-white">
+                <div className="text-[11px] uppercase tracking-wider text-[#999] mb-3">Register</div>
+                <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-[rgba(14,165,233,0.08)] border border-[#0ea5e9] animate-pulse">
+                  <span className="text-[14px] font-semibold text-[#e65100]">General Lodgement</span>
+                  <span className="text-[#e65100]">&rarr;</span>
+                </div>
               </div>
             </div>
-          ))}
+          )}
+
+          {/* Page 2: Intermediary */}
+          {currentPage === 2 && (
+            <div>
+              <h3 className="text-lg text-[#003d7c] font-semibold mb-3">General Lodgement</h3>
+              <p className="text-xs text-[#666] mb-4">Please select general lodgement type to proceed</p>
+              <div className="border border-[#d7d7d7] rounded-lg px-3 py-2.5 mb-4 bg-white text-[13px]">
+                <span className="text-[#333]">Update registered qualified individual information</span>
+                <span className="text-[10px] text-[#999] ml-2">(Approved liquidator)</span>
+              </div>
+              <div className="inline-block px-4 py-2.5 rounded-lg bg-[#003d7c] text-white text-[13px] font-semibold animate-pulse">
+                Retrieve information
+              </div>
+            </div>
+          )}
+
+          {/* Page 3: Form (typing animation) */}
+          {currentPage === 3 && (
+            <div>
+              <h3 className="text-lg text-[#003d7c] font-semibold mb-1">Withdrawal from Approved Liquidators</h3>
+              <p className="text-xs text-[#666] mb-3.5">Live agent fill &mdash; values from consolidated extraction output.</p>
+              {fill.map(([label, value], i) => (
+                <div key={label} className="grid grid-cols-[190px_1fr] gap-2.5 py-[9px] border-b border-[#ececec] last:border-b-0">
+                  <div className="text-[13px] text-[var(--muted)]">{label}</div>
+                  <div className={`min-h-[30px] border rounded-lg px-2.5 py-[7px] text-[13px] transition-colors ${
+                    filledValues[i] === "" ? "bg-[#fafafa] border-[#d7d7d7]"
+                    : filledValues[i] === value ? "bg-[rgba(43,122,97,0.06)] border-[var(--ok)]"
+                    : "bg-[rgba(14,165,233,0.08)] border-[#0ea5e9]"
+                  }`}>
+                    {filledValues[i]}
+                    {filledValues[i] !== "" && filledValues[i] !== value && (
+                      <span className="inline-block w-[2px] h-[14px] bg-[#0ea5e9] ml-[1px] animate-pulse align-middle" />
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Page 4: Review */}
+          {currentPage === 4 && (
+            <div>
+              <h3 className="text-lg text-[#003d7c] font-semibold mb-3">Review &amp; Submit</h3>
+              <p className="text-xs text-[#666] mb-4">Verify your submission details below.</p>
+              <div className="border border-[#ece5d8] rounded-xl p-4 bg-white mb-4">
+                {fill.map(([label, value]) => (
+                  <div key={label} className="grid grid-cols-[190px_1fr] gap-2.5 py-[7px] border-b border-[#f0f0f0] last:border-b-0 text-[13px]">
+                    <span className="text-[var(--muted)]">{label}</span>
+                    <span className="font-medium">{value}</span>
+                  </div>
+                ))}
+              </div>
+              <label className="flex items-start gap-2.5 mb-4 text-[13px] text-[#333]">
+                <input type="checkbox" checked readOnly className="mt-0.5 accent-[#003d7c]" />
+                <span>I, Lim Ming-Yang, Raphael, declare that the information provided is true and correct.</span>
+              </label>
+              <div className="inline-block px-4 py-2.5 rounded-lg bg-[#003d7c] text-white text-[13px] font-semibold">
+                Submit
+              </div>
+            </div>
+          )}
+
+          {/* Page 0: waiting */}
+          {currentPage === 0 && (
+            <div className="flex items-center justify-center h-full text-[var(--muted)] text-[13px] animate-pulse">
+              Initializing TinyFish agent...
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Agent log sidebar */}
       <div className="bg-[var(--panel)] border border-[var(--line)] rounded-2xl flex flex-col">
         <div className="px-4 py-3.5 border-b border-[var(--line)] bg-[var(--panel-2)] font-mono text-[11px] font-medium tracking-wider uppercase text-[#7b7b7b]">
-          Tinyfish Agent
+          TinyFish Agent
         </div>
-        <div className="px-4 py-3.5 flex flex-col gap-2.5 min-h-[420px]">
+        <div className="px-4 py-3.5 flex flex-col gap-2.5 min-h-[420px] max-h-[520px] overflow-y-auto">
           {logs.map((line, i) => (
             <div key={i} className="pb-2.5 border-b border-[#eee7db] text-[13px] text-[#575757]"
               dangerouslySetInnerHTML={{ __html: line }} />
           ))}
+          <div ref={logEndRef} />
         </div>
+      </div>
+
+      {/* Download PDF button — spans full width below both columns */}
+      <div className="col-span-2 mt-2">
+        <button
+          onClick={() => alert("PDF download not yet connected.")}
+          className="px-4 py-[11px] rounded-[10px] font-semibold text-[13px] border border-[var(--line)] bg-white text-[#171717] hover:bg-[#f5f5f5] transition-colors"
+        >
+          Download PDF
+        </button>
       </div>
     </div>
   );
@@ -524,19 +618,53 @@ export default function ClientPage() {
   const [detectedChanges, setDetectedChanges] = useState<ChangeItem[]>([]);
   const [changeUploads, setChangeUploads] = useState<Record<number, { filename: string; fields: any[] }>>({});
   const [logs, setLogs] = useState<string[]>([]);
-  const [filledValues, setFilledValues] = useState<string[]>(() => Array(fallback.fill.length).fill(""));
+  const [reasoningItems, setReasoningItems] = useState<ReasoningItem[]>([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [filledValues, setFilledValues] = useState<string[]>(() => Array(4).fill(""));
+
+  const portalFill: [string, string][] = useMemo(() => {
+    if (reasoningItems.length === 0) return data.fill;
+    const findField = (keywords: string[]) =>
+      reasoningItems.find(r => keywords.some(k => r.field.toLowerCase().includes(k)))?.value || "";
+    return [
+      ["Email address", "jerometeoh@gmail.com"],
+      ["Description of lodgement", findField(["description", "lodgement"]) || "Withdrawal from Being Approved Liquidators"],
+      ["Date of document", "28 Mar 2026"],
+      ["Attach form (PDF)", findField(["pdf", "form", "document", "attach"]) || "CSP_Update_filled.pdf"],
+    ];
+  }, [reasoningItems, data.fill]);
 
   useEffect(() => {
-    if (filledValues.length === 0 && data.fill.length > 0) {
-      setFilledValues(Array(data.fill.length).fill(""));
+    if (filledValues.length !== portalFill.length) {
+      setFilledValues(Array(portalFill.length).fill(""));
     }
-  }, [data.fill.length, filledValues.length]);
+  }, [portalFill.length, filledValues.length]);
 
   const runFill = useCallback(() => {
     if (logs.length) return;
-    setLogs(["<strong>Tinyfish simulation initialized.</strong> Using reviewed fields and refreshed graph nodes."]);
-    setTimeout(() => setLogs((p) => [...p, "ACRA portal shell loaded. Beginning projected fill."]), 600);
-    data.fill.forEach(([label, value], idx) => {
+
+    // Phase 1: Landing page
+    setCurrentPage(1);
+    setLogs(["<strong>TinyFish agent initialized.</strong> Navigating to BizFile+ portal..."]);
+    setTimeout(() => setLogs((p) => [...p, "Page loaded. Scanning for &lsquo;General Lodgement&rsquo; link..."]), 600);
+    setTimeout(() => setLogs((p) => [...p, "Found <strong>General Lodgement</strong> in Popular services. Clicking..."]), 1200);
+
+    // Phase 2: Intermediary page
+    setTimeout(() => {
+      setCurrentPage(2);
+      setLogs((p) => [...p, "Intermediary page loaded. Locating dropdown..."]);
+    }, 1800);
+    setTimeout(() => setLogs((p) => [...p, "Selecting <strong>&lsquo;Update registered qualified individual information&rsquo;</strong> from dropdown..."]), 2400);
+    setTimeout(() => setLogs((p) => [...p, "Clicking <strong>&lsquo;Retrieve information&rsquo;</strong> button..."]), 3200);
+
+    // Phase 3: Form page (typing animation)
+    const formStart = 3800;
+    setTimeout(() => {
+      setCurrentPage(3);
+      setLogs((p) => [...p, "Form page loaded. Beginning field entry..."]);
+    }, formStart);
+
+    portalFill.forEach(([label, value], idx) => {
       setTimeout(() => {
         setLogs((p) => [...p, `Filling <strong>${label}</strong> with <strong>${value}</strong>.`]);
         let n = 0;
@@ -549,13 +677,25 @@ export default function ClientPage() {
           });
           if (n >= value.length) clearInterval(timer);
         }, 28);
-      }, 1100 + idx * 700);
+      }, formStart + 400 + idx * 700);
     });
+
+    const formEnd = formStart + 400 + portalFill.length * 700;
+    setTimeout(() => setLogs((p) => [...p, "All fields filled. Clicking <strong>&lsquo;Review and confirm&rsquo;</strong>..."]), formEnd + 200);
+
+    // Phase 4: Review page
+    const reviewStart = formEnd + 1200;
     setTimeout(() => {
-      setLogs((p) => [...p, "<strong>Complete.</strong> Review package ready. No real submission."]);
-      setTimeout(() => setStep(5), 800);
-    }, 1100 + data.fill.length * 700 + 300);
-  }, [logs.length, data.fill]);
+      setCurrentPage(4);
+      setLogs((p) => [...p, "Review page loaded. Verifying submitted information..."]);
+    }, reviewStart);
+    setTimeout(() => setLogs((p) => [...p, "Ticking <strong>declaration checkbox</strong>..."]), reviewStart + 800);
+    setTimeout(() => setLogs((p) => [...p, "Clicking <strong>&lsquo;Submit&rsquo;</strong>..."]), reviewStart + 1400);
+    setTimeout(() => setLogs((p) => [...p, "<strong>Submission complete.</strong> Reference number received."]), reviewStart + 2200);
+
+    // Auto-advance to Step 5
+    setTimeout(() => setStep(5), reviewStart + 3200);
+  }, [logs.length, portalFill]);
 
   useEffect(() => {
     if (step === 4) runFill();
@@ -627,10 +767,10 @@ export default function ClientPage() {
               uploadedFields={uploadedFields}
               changes={detectedChanges}
               changeUploads={changeUploads}
-              onComplete={() => setStep(4)}
+              onComplete={(_, items) => { setReasoningItems(items); setStep(4); }}
             />
           )}
-          {step === 4 && <PortalStep fill={data.fill} filledValues={filledValues} logs={logs} />}
+          {step === 4 && <PortalStep fill={portalFill} filledValues={filledValues} logs={logs} currentPage={currentPage} />}
           {step === 5 && <DoneStep summary={data.summary} />}
         </div>
       </main>
