@@ -7,3 +7,5 @@ reportlab
 fastapi
 uvicorn
 sse-starlette
+python-multipart
+tinyfish

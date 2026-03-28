@@ -10,7 +10,16 @@ logger = logging.getLogger(__name__)
 SEED_SYSTEM_PROMPT = """You are a regulatory compliance assistant. Given this compliance form definition,
 produce a JSON with:
 1. seed_url: the government/regulatory authority URL to start navigation from
-2. For each field, a target URL on the authority's website and a plain English extraction goal
+2. For each field, a target URL on the authority's website and a concrete extraction goal
+
+IMPORTANT RULES FOR GOALS:
+- Goals must be SPECIFIC and ACTION-ORIENTED so a browser agent can complete them quickly
+- BAD: "Determine the filing fees for withdrawal" (too vague, agent wanders)
+- GOOD: "On this page, find the section about fees or charges. Extract the exact fee amount and description. Return JSON: {fee_amount, fee_description}"
+- Each goal should tell the agent exactly WHERE on the page to look (table, section heading, sidebar, etc.)
+- Each goal MUST end with: Return JSON with the specific extracted data.
+- Use the MOST SPECIFIC URL you know — deep-link to the exact page, not a landing/index page
+- Every field_id in the form MUST have a corresponding node
 
 Return ONLY valid JSON, no markdown, no preamble.
 
@@ -21,7 +30,7 @@ Return format:
     {
       "field_id": "...",
       "url": "...",
-      "extraction_goal": "Find ... Return JSON with the relevant details."
+      "extraction_goal": "On this page, locate the [specific section]. Extract [specific data]. Return JSON: {key: value}"
     }
   ]
 }"""

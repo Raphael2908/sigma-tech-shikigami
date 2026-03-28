@@ -112,6 +112,122 @@ async def parallel_extract(nodes: list[Node], db_path: str | None = None) -> lis
     return results
 
 
+POLL_INTERVAL = 3  # seconds between polls for SDK-based extraction
+
+
+async def sequential_extract_stream(nodes: list[Node], db_path: str | None = None):
+    """Yield SSE-style events as we extract all nodes in parallel via TinyFish SDK.
+
+    Uses client.agent.queue() to submit all nodes at once, then polls for completion.
+
+    Event types yielded:
+      {"type": "progress", "node_url": str, "message": str}
+      {"type": "node_complete", "node_url": str, "status": str}
+      {"type": "extract_done", "results": list[ExtractionResult]}
+    """
+    if not nodes:
+        yield {"type": "extract_done", "results": []}
+        return
+
+    await init_db(db_path)
+
+    from tinyfish import AsyncTinyFish, RunStatus
+    from config import TINYFISH_API_KEY
+
+    tf = AsyncTinyFish(api_key=TINYFISH_API_KEY)
+    results_map: dict[str, ExtractionResult] = {}
+
+    # Step 1: Submit all runs — yield progress for each node immediately
+    run_map: dict[str, Node] = {}
+    for node in nodes:
+        yield {"type": "progress", "node_url": node.url, "message": f"Submitting agent for: {node.url}"}
+
+    # Submit all at once
+    submit_tasks = [
+        tf.agent.queue(url=node.url, goal=node.extraction_goal or "")
+        for node in nodes
+    ]
+    responses = await asyncio.gather(*submit_tasks, return_exceptions=True)
+
+    for node, resp in zip(nodes, responses):
+        if isinstance(resp, Exception):
+            logger.error("Submit failed for %s: %s", node.url, resp)
+            yield {"type": "progress", "node_url": node.url, "message": f"Submit failed: {str(resp)[:80]}"}
+            results_map[node.url] = ExtractionResult(
+                node=node, current_json={}, current_hash="",
+                status="error_other", prior_hash=node.content_hash,
+            )
+        else:
+            run_map[resp.run_id] = node
+            yield {"type": "progress", "node_url": node.url, "message": f"Agent queued (run: {resp.run_id[:8]}...)"}
+
+    # Step 2: Poll until all complete
+    pending = set(run_map.keys())
+    while pending:
+        await asyncio.sleep(POLL_INTERVAL)
+
+        for run_id in list(pending):
+            try:
+                run = await tf.runs.get(run_id)
+            except Exception as e:
+                logger.warning("Poll error for %s: %s", run_id, e)
+                continue
+
+            node = run_map[run_id]
+
+            if run.status == RunStatus.COMPLETED:
+                pending.discard(run_id)
+                raw_result = run.result if run.result else {}
+                yield {"type": "progress", "node_url": node.url, "message": "Extraction complete"}
+
+                # Triage + save
+                now = datetime.now(timezone.utc).isoformat()
+                prior_hash = node.content_hash
+                current_hash = hash_json(raw_result)
+                json_str = json.dumps(raw_result, sort_keys=True)
+                status = "changed" if prior_hash is None or prior_hash != current_hash else "unchanged"
+
+                er = ExtractionResult(
+                    node=node, current_json=raw_result, current_hash=current_hash,
+                    status=status, prior_hash=prior_hash,
+                )
+                node.content_hash = current_hash
+                node.last_extracted_json = json_str
+                node.last_extracted_at = now
+                await upsert_node(node, db_path)
+
+                db_node = await get_node(node.url, db_path)
+                if db_node and db_node.id is not None:
+                    await save_version(db_node.id, current_hash, json_str, db_path)
+
+                results_map[node.url] = er
+                yield {"type": "node_complete", "node_url": node.url, "status": er.status}
+
+            elif run.status in (RunStatus.FAILED, RunStatus.CANCELLED):
+                pending.discard(run_id)
+                logger.error("Run %s %s for %s", run_id, run.status, node.url)
+                yield {"type": "progress", "node_url": node.url, "message": f"Agent {run.status.value}"}
+
+                results_map[node.url] = ExtractionResult(
+                    node=node, current_json={}, current_hash="",
+                    status="error_other", prior_hash=node.content_hash,
+                )
+                yield {"type": "node_complete", "node_url": node.url, "status": "error_other"}
+
+            else:
+                # Still PENDING or RUNNING — report steps if available
+                step_count = run.num_of_steps or 0
+                if step_count > 0:
+                    yield {"type": "progress", "node_url": node.url, "message": f"Agent working... ({step_count} steps)"}
+
+    # Build ordered results
+    results = [results_map.get(n.url, ExtractionResult(
+        node=n, current_json={}, current_hash="", status="error_other", prior_hash=n.content_hash,
+    )) for n in nodes]
+
+    yield {"type": "extract_done", "results": results}
+
+
 async def _repair_single(er: ExtractionResult, db_path: str | None = None) -> ExtractionResult:
     """Attempt to repair a single failed extraction by finding the new URL via parent."""
     node = er.node

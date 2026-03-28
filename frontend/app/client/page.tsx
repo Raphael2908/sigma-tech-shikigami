@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
-import type { Payload } from "@/lib/api";
-import { fetchPayload } from "@/lib/api";
+import type { Payload, ChangeItem, ReasoningItem } from "@/lib/api";
+import { uploadFiles, streamBrowse, streamConsolidate } from "@/lib/api";
 
 const fallback: Payload = {
   generated_at: "", client_name: "Atlas Restructuring Pte Ltd",
@@ -16,11 +16,7 @@ const fallback: Payload = {
     { kind: "warn", title: "Supporting document list expanded", desc: "Current extract includes an additional document expectation.", meta: "Version history delta" },
     { kind: "info", title: "Top-level navigation drift detected", desc: "Canary noticed site-structure drift.", meta: "Canary status | changed" },
   ],
-  uploads: [
-    ["acra_withdrawal_form.pdf", "Simulated preprocess", "OpenAI derives structured fields and TinyFish goals"],
-    ["supporting_statement.pdf", "Simulated preprocess", "Narrative grounds normalized into field context"],
-    ["regulatory_correspondence.pdf", "Simulated preprocess", "References linked to graph nodes"],
-  ],
+  uploads: [],
   groups: [
     ["Withdrawal request", [["Lodgement description", "Pending extraction", "review"], ["Supporting documents", "Identity document, signed statement", "ok"]]],
     ["Supporting materials", [["Required PDF form", "Pending extraction", "missing"]]],
@@ -40,40 +36,64 @@ const fallback: Payload = {
   summary: { changes: 2, rebuilds: 1, simulated_fields: 5, real_submissions: 0, completion_ratio: 0.4 },
 };
 
-function ChangeFeed({ changes }: { changes: Payload["changes"] }) {
-  return (
-    <div className="flex flex-col gap-2.5">
-      {changes.map((item) => (
-        <div key={item.title} className="flex gap-3 p-3 border border-[#ece5d8] rounded-xl bg-white">
-          <div className={`w-6 h-6 rounded-lg grid place-items-center font-mono text-[11px] font-bold shrink-0 ${
-            item.kind === "warn" ? "bg-[var(--warn-soft)] text-[var(--warn)]"
-            : item.kind === "ok" ? "bg-[var(--ok-soft)] text-[var(--ok)]"
-            : "bg-[var(--accent-soft)] text-[var(--accent)]"
-          }`}>
-            {item.kind === "warn" ? "!" : item.kind === "ok" ? "OK" : "i"}
-          </div>
-          <div>
-            <div className="text-sm font-semibold">{item.title}</div>
-            <div className="text-[13px] text-[var(--muted)]">{item.desc}</div>
-            <div className="mt-1 font-mono text-[10px] font-medium text-[#8d8d8d]">{item.meta}</div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
+/* ── Step 01: Upload ─────────────────────────────────────────── */
 
-function UploadStep({ uploads, uploaded, onUpload }: { uploads: Payload["uploads"]; uploaded: boolean; onUpload: () => void }) {
+function UploadStep({ onUploadComplete }: {
+  onUploadComplete: (uploads: [string, string, string][], fields: any[]) => void;
+}) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<[string, string, string][]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFiles = async (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return;
+    setUploading(true);
+    setError(null);
+    try {
+      const result = await uploadFiles(fileList);
+      setUploadedFiles(result.uploads);
+      onUploadComplete(result.uploads, result.extracted_fields);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <>
-      {!uploaded && (
-        <div onClick={onUpload} className="border-2 border-dashed border-[var(--line)] p-[34px_20px] rounded-2xl text-center bg-white cursor-pointer hover:border-[var(--accent)]">
-          <h3 className="text-[30px] font-serif mb-1.5" style={{ fontFamily: "Georgia, serif" }}>Upload the ACRA withdrawal form pack</h3>
-          <p className="text-[13px] text-[var(--muted)]">Simulated demo: OpenAI preprocesses files into structured fields and TinyFish goals.</p>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".pdf"
+        multiple
+        className="hidden"
+        onChange={(e) => handleFiles(e.target.files)}
+      />
+      {uploadedFiles.length === 0 && (
+        <div
+          onClick={() => !uploading && fileInputRef.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          onDrop={(e) => { e.preventDefault(); e.stopPropagation(); handleFiles(e.dataTransfer.files); }}
+          className={`border-2 border-dashed border-[var(--line)] p-[34px_20px] rounded-2xl text-center bg-white cursor-pointer hover:border-[var(--accent)] transition-colors ${uploading ? "opacity-60 pointer-events-none" : ""}`}
+        >
+          {uploading ? (
+            <>
+              <h3 className="text-[30px] font-serif mb-1.5" style={{ fontFamily: "Georgia, serif" }}>Uploading...</h3>
+              <p className="text-[13px] text-[var(--muted)]">Saving to GitHub and extracting fields with OpenAI.</p>
+            </>
+          ) : (
+            <>
+              <h3 className="text-[30px] font-serif mb-1.5" style={{ fontFamily: "Georgia, serif" }}>Upload your PDF documents</h3>
+              <p className="text-[13px] text-[var(--muted)]">Drop PDF files here or click to browse. Files will be uploaded to GitHub and processed by OpenAI for field extraction.</p>
+            </>
+          )}
         </div>
       )}
+      {error && <div className="mt-2 text-sm text-red-600">{error}</div>}
       <div className="flex flex-col gap-2.5 mt-3.5">
-        {uploaded && uploads.map((file) => (
+        {uploadedFiles.map((file) => (
           <div key={file[0]} className="flex justify-between items-center p-[12px_14px] border border-[#ece5d8] rounded-xl bg-white">
             <div>
               <strong className="text-sm">{file[0]}</strong>
@@ -87,63 +107,340 @@ function UploadStep({ uploads, uploaded, onUpload }: { uploads: Payload["uploads
   );
 }
 
-function ReviewStep({ data, resolved, setResolved, onContinue }: {
-  data: Payload; resolved: number[]; setResolved: (r: number[]) => void; onContinue: () => void;
+/* ── Step 02: Browsing + Changes ─────────────────────────────── */
+
+type NodeTrace = {
+  url: string;
+  status: "active" | "done" | "waiting" | "error";
+  messages: string[];
+};
+
+function BrowsingStep({ onComplete }: {
+  onComplete: (changes: ChangeItem[], changeUploads: Record<number, { filename: string; fields: any[] }>) => void;
 }) {
-  const ready = resolved.length === data.actions.length;
+  const [nodeTraces, setNodeTraces] = useState<NodeTrace[]>([]);
+  const [pipelineMessages, setPipelineMessages] = useState<string[]>([]);
+  const [browseComplete, setBrowseComplete] = useState(false);
+  const [detectedChanges, setDetectedChanges] = useState<ChangeItem[]>([]);
+  const [changeUploads, setChangeUploads] = useState<Record<number, { filename: string; fields: any[] }>>({});
+  const [uploading, setUploading] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
+  const startedRef = useRef(false);
+  const logEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll the log
+  useEffect(() => {
+    logEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [pipelineMessages, nodeTraces]);
+
+  useEffect(() => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+
+    setPipelineMessages(["Connecting to backend..."]);
+
+    streamBrowse(
+      (evt) => {
+        const msg = evt.message || "";
+        const nodeUrl = evt.node_url;
+
+        if (evt.step === "extract" && nodeUrl) {
+          setNodeTraces((prev) => {
+            const existing = prev.find((n) => n.url === nodeUrl);
+            if (existing) {
+              return prev.map((n) =>
+                n.url === nodeUrl ? { ...n, messages: [...n.messages, msg] } : n
+              );
+            }
+            return [
+              ...prev.map((n) => n.status === "active" ? { ...n, status: "done" as const } : n),
+              { url: nodeUrl, status: "active" as const, messages: [msg] },
+            ];
+          });
+        } else {
+          setPipelineMessages((p) => [...p, `[${evt.step}] ${msg}`]);
+        }
+      },
+      () => {},
+      (data) => {
+        setDetectedChanges(data.changes);
+        setBrowseComplete(true);
+        setNodeTraces((prev) => prev.map((n) => ({ ...n, status: "done" as const })));
+        setPipelineMessages((p) => [...p, `Extraction complete. ${data.extraction_count} nodes processed.`]);
+      },
+      (errMsg) => {
+        setError(errMsg);
+        setPipelineMessages((p) => [...p, `ERROR: ${errMsg}`]);
+      },
+    );
+  }, []);
+
+  const handleChangeUpload = async (changeIdx: number, fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return;
+    setUploading(changeIdx);
+    try {
+      const result = await uploadFiles(fileList);
+      setChangeUploads((prev) => ({
+        ...prev,
+        [changeIdx]: { filename: result.uploads[0]?.[0] || "unknown", fields: result.extracted_fields },
+      }));
+    } catch (e) {
+      console.error("Change upload failed:", e);
+    } finally {
+      setUploading(null);
+    }
+  };
+
+  const allAddressed = detectedChanges.length === 0 || Object.keys(changeUploads).length >= detectedChanges.filter(c => c.kind === "warn").length;
+
   return (
     <>
-      <div className="bg-[var(--panel)] border border-[var(--line)] rounded-2xl overflow-hidden">
-        <div className="flex justify-between p-[14px_16px] bg-[var(--panel-2)] border-b border-[var(--line)]">
-          <span className="text-sm font-medium">Pre-populated Draft</span>
-          <span className="text-sm text-[var(--muted)]">{data.fill.length} fields extracted</span>
-        </div>
-        <div>
-          {data.groups.map(([groupName, fields]) => (
-            <div key={groupName} className="py-3.5">
-              <div className="px-4 pb-2 font-mono text-[10px] font-medium tracking-[.14em] uppercase text-[#8e8e8e]">{groupName}</div>
-              {fields.map(([name, value, status]) => (
-                <div key={name} className="grid grid-cols-[180px_1fr_20px] gap-2.5 px-4 py-2.5 border-t border-[#f0eadf] items-center first:border-t-0">
-                  <div className="text-[13px] text-[#666]">{name}</div>
-                  <div className={`px-2.5 py-2 border rounded-lg text-[13px] ${
-                    status !== "ok" ? "bg-[var(--warn-soft)] border-[#e2c7be]" : "bg-[#faf7ef] border-[#e8e1d4]"
-                  }`}>{value}</div>
-                  <div className={`w-[18px] h-[18px] rounded-full grid place-items-center font-mono text-[10px] font-bold ${
-                    status === "ok" ? "bg-[var(--ok-soft)] text-[var(--ok)]"
-                    : status === "review" ? "bg-[var(--review-soft)] text-[var(--review)]"
-                    : "bg-[var(--warn-soft)] text-[var(--warn)]"
-                  }`}>
-                    {status === "ok" ? "OK" : status === "review" ? "?" : "!"}
+      {/* Phase A: Live trace */}
+      {!browseComplete && (
+        <div className="grid grid-cols-[1fr_280px] gap-3.5">
+          {/* Node trace panel */}
+          <div className="bg-[var(--panel)] border border-[var(--line)] rounded-2xl overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 bg-[var(--panel-2)] border-b border-[var(--line)]">
+              <div className="w-2 h-2 rounded-full bg-[var(--ok)] animate-pulse" />
+              <span className="font-mono text-[11px] font-medium tracking-wider uppercase text-[#7b7b7b]">TinyFish Trace</span>
+              <span className="ml-auto text-[11px] text-[var(--muted)]">{nodeTraces.length} node{nodeTraces.length !== 1 ? "s" : ""}</span>
+            </div>
+            <div className="p-4 min-h-[360px] max-h-[480px] overflow-y-auto flex flex-col gap-3">
+              {nodeTraces.length === 0 && (
+                <div className="text-[13px] text-[var(--muted)] animate-pulse">Initializing pipeline...</div>
+              )}
+              {nodeTraces.map((node) => (
+                <div key={node.url} className={`p-3 rounded-xl border transition-all ${
+                  node.status === "active"
+                    ? "border-[var(--accent)] bg-[var(--accent-soft)]"
+                    : node.status === "done"
+                    ? "border-[#ece5d8] bg-white"
+                    : node.status === "error"
+                    ? "border-[var(--warn)] bg-[var(--warn-soft)]"
+                    : "border-[var(--line)] bg-[var(--panel)]"
+                }`}>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className={`w-2 h-2 rounded-full shrink-0 ${
+                      node.status === "active" ? "bg-[var(--accent)] animate-pulse"
+                      : node.status === "done" ? "bg-[var(--ok)]"
+                      : node.status === "error" ? "bg-[var(--warn)]"
+                      : "bg-[#ccc]"
+                    }`} />
+                    <div className="font-mono text-[11px] text-[#555] truncate">{node.url}</div>
+                  </div>
+                  <div className="flex flex-col gap-1 ml-4">
+                    {node.messages.map((msg, j) => (
+                      <div key={j} className={`text-[12px] ${
+                        j === node.messages.length - 1 && node.status === "active"
+                          ? "text-[var(--accent)] font-medium"
+                          : "text-[#888]"
+                      }`}>
+                        {msg}
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}
+              <div ref={logEndRef} />
+            </div>
+          </div>
+
+          {/* Pipeline log sidebar */}
+          <div className="bg-[var(--panel)] border border-[var(--line)] rounded-2xl flex flex-col">
+            <div className="px-4 py-3.5 border-b border-[var(--line)] bg-[var(--panel-2)] font-mono text-[11px] font-medium tracking-wider uppercase text-[#7b7b7b]">
+              Pipeline Log
+            </div>
+            <div className="px-4 py-3.5 flex flex-col gap-2 min-h-[320px] max-h-[480px] overflow-y-auto">
+              {pipelineMessages.map((line, i) => (
+                <div key={i} className="pb-2 border-b border-[#eee7db] text-[11px] text-[#575757] font-mono">
+                  {line}
+                </div>
+              ))}
+              {pipelineMessages.length === 0 && (
+                <div className="text-[12px] text-[var(--muted)] animate-pulse">Connecting...</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error banner */}
+      {error && (
+        <div className="mb-3 p-3 bg-[var(--warn-soft)] border border-[var(--warn)] rounded-xl text-sm text-[var(--warn)]">
+          <strong>Connection error:</strong> {error}
+        </div>
+      )}
+
+      {/* Phase B: Change response */}
+      {browseComplete && (
+        <div className="flex flex-col gap-2.5">
+          {detectedChanges.length === 0 && (
+            <div className="p-4 bg-[var(--ok-soft)] border border-[var(--ok)] rounded-xl text-sm">
+              No changes detected. All extracted data is up to date.
+            </div>
+          )}
+          {detectedChanges.map((change, i) => (
+            <div key={i} className="p-3 border border-[#ece5d8] rounded-xl bg-white">
+              <div className="flex gap-3">
+                <div className={`w-6 h-6 rounded-lg grid place-items-center font-mono text-[11px] font-bold shrink-0 ${
+                  change.kind === "warn" ? "bg-[var(--warn-soft)] text-[var(--warn)]"
+                  : "bg-[var(--accent-soft)] text-[var(--accent)]"
+                }`}>
+                  {change.kind === "warn" ? "!" : "i"}
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-semibold">{change.title}</div>
+                  <div className="text-[13px] text-[var(--muted)]">{change.desc}</div>
+                  <div className="mt-1 font-mono text-[10px] font-medium text-[#8d8d8d]">{change.meta}</div>
+
+                  {/* Upload revised doc for this change */}
+                  {change.kind === "warn" && (
+                    <div className="mt-2.5">
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        className="hidden"
+                        ref={(el) => { fileInputRefs.current[i] = el; }}
+                        onChange={(e) => handleChangeUpload(i, e.target.files)}
+                      />
+                      {changeUploads[i] ? (
+                        <div className="flex items-center gap-2 px-3 py-2 bg-[var(--ok-soft)] rounded-lg text-[12px]">
+                          <span className="w-4 h-4 rounded-full bg-[var(--ok)] text-white grid place-items-center text-[10px] font-bold">OK</span>
+                          <span className="font-medium">{changeUploads[i].filename}</span>
+                          <span className="text-[var(--muted)]">— {changeUploads[i].fields.length} fields extracted</span>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => fileInputRefs.current[i]?.click()}
+                          disabled={uploading === i}
+                          className="px-3 py-2 rounded-lg text-[12px] font-medium border border-[var(--line)] bg-[var(--panel)] hover:border-[var(--accent)] transition-colors disabled:opacity-50"
+                        >
+                          {uploading === i ? "Uploading..." : "Upload revised document"}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           ))}
-          {data.actions.map((action, i) =>
-            resolved.includes(i) ? null : (
-              <div key={i} className={`mx-4 mb-3 p-[12px_14px] rounded-[10px] text-[13px] ${
-                action[0] === "warnbox" ? "bg-[var(--warn-soft)]" : "bg-[var(--review-soft)]"
-              }`}>
-                <strong>{action[1]}:</strong> {action[2]}<br />
-                <span className="inline-block mt-1.5 text-[var(--accent)] font-semibold cursor-pointer underline"
-                  onClick={() => setResolved([...resolved, i])}>
-                  {action[3]}
-                </span>
-              </div>
-            )
-          )}
+          <div className="flex justify-between items-center gap-3 mt-3 text-[13px] text-[var(--muted)]">
+            <span>{allAddressed ? "All changes addressed." : "Upload revised documents for flagged changes."}</span>
+            <button
+              onClick={() => onComplete(detectedChanges, changeUploads)}
+              className="px-4 py-[11px] rounded-[10px] font-semibold text-[13px] bg-[#171717] text-white disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Continue to Review
+            </button>
+          </div>
         </div>
-      </div>
-      <div className="flex justify-between items-center gap-3 mt-3 text-[13px] text-[var(--muted)]">
-        <span>High confidence fields flow to the simulated portal. Review-required fields stay gated.</span>
-        <button disabled={!ready} onClick={onContinue}
-          className="shrink-0 px-4 py-[11px] rounded-[10px] font-semibold text-[13px] bg-[var(--accent)] text-white disabled:opacity-40 disabled:cursor-not-allowed">
-          Tinyfish simulated fill
-        </button>
-      </div>
+      )}
     </>
   );
 }
+
+/* ── Step 03: Consolidation ──────────────────────────────────── */
+
+function ConsolidationStep({
+  uploadedFields, changes, changeUploads, onComplete,
+}: {
+  uploadedFields: any[];
+  changes: ChangeItem[];
+  changeUploads: Record<number, { filename: string; fields: any[] }>;
+  onComplete: (pdfUrl: string) => void;
+}) {
+  const [reasoningLog, setReasoningLog] = useState<ReasoningItem[]>([]);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [consolidationDone, setConsolidationDone] = useState(false);
+  const [progressMsg, setProgressMsg] = useState<string>("Starting consolidation...");
+  const startedRef = useRef(false);
+
+  useEffect(() => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+
+    const body = {
+      uploaded_files: [{ fields: uploadedFields }],
+      changes,
+      change_uploads: Object.values(changeUploads).map((cu) => ({ fields: cu.fields })),
+    };
+
+    streamConsolidate(
+      body,
+      (item) => setReasoningLog((p) => [...p, item]),
+      (evt) => setProgressMsg(evt.message),
+      (data) => {
+        setPdfUrl(data.pdf_url);
+        setConsolidationDone(true);
+      },
+    ).catch((e) => {
+      console.error("Consolidation failed:", e);
+      setProgressMsg("Consolidation failed. Using fallback data.");
+      setConsolidationDone(true);
+    });
+  }, [uploadedFields, changes, changeUploads]);
+
+  const confidenceColor = (c: string) => {
+    if (c === "high") return "bg-[var(--ok-soft)] text-[var(--ok)]";
+    if (c === "medium") return "bg-[var(--review-soft)] text-[var(--review)]";
+    return "bg-[var(--warn-soft)] text-[var(--warn)]";
+  };
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="bg-[var(--panel)] border border-[var(--line)] rounded-2xl overflow-hidden">
+        <div className="flex justify-between p-[14px_16px] bg-[var(--panel-2)] border-b border-[var(--line)]">
+          <span className="text-sm font-medium">OpenAI Consolidation</span>
+          <span className="text-sm text-[var(--muted)]">{progressMsg}</span>
+        </div>
+        <div className="p-4 flex flex-col gap-3 min-h-[300px]">
+          {reasoningLog.map((item, i) => (
+            <div key={i} className="p-3 border border-[#ece5d8] rounded-xl bg-white">
+              <div className="flex justify-between items-start mb-1.5">
+                <div className="text-sm font-semibold">{item.field}</div>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${confidenceColor(item.confidence)}`}>
+                  {item.confidence}
+                </span>
+              </div>
+              <div className="grid grid-cols-[100px_1fr] gap-1.5 text-[12px]">
+                <span className="text-[var(--muted)]">Source:</span>
+                <span className="font-mono">{item.source_doc}</span>
+                <span className="text-[var(--muted)]">Value:</span>
+                <span className="font-medium">{item.value}</span>
+                <span className="text-[var(--muted)]">Reason:</span>
+                <span className="text-[#575757]">{item.reason}</span>
+              </div>
+            </div>
+          ))}
+          {reasoningLog.length === 0 && !consolidationDone && (
+            <div className="text-[13px] text-[var(--muted)] animate-pulse">OpenAI is analyzing extracted fields...</div>
+          )}
+        </div>
+      </div>
+
+      {consolidationDone && (
+        <div className="flex justify-between items-center gap-3 text-[13px] text-[var(--muted)]">
+          <div className="flex items-center gap-3">
+            {pdfUrl && (
+              <a href={pdfUrl} target="_blank" rel="noopener noreferrer"
+                className="px-3 py-2 rounded-lg text-[12px] font-medium border border-[var(--ok)] bg-[var(--ok-soft)] text-[var(--ok)] hover:opacity-80">
+                Download filled PDF
+              </a>
+            )}
+            <span>{reasoningLog.length} fields consolidated</span>
+          </div>
+          <button onClick={() => onComplete(pdfUrl || "")}
+            className="px-4 py-[11px] rounded-[10px] font-semibold text-[13px] bg-[#171717] text-white">
+            Continue to Simulate Fill
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Step 04: Portal Sim (unchanged) ─────────────────────────── */
 
 function PortalStep({ fill, filledValues, logs }: { fill: Payload["fill"]; filledValues: string[]; logs: string[] }) {
   return (
@@ -189,6 +486,8 @@ function PortalStep({ fill, filledValues, logs }: { fill: Payload["fill"]; fille
   );
 }
 
+/* ── Step 05: Done (unchanged) ───────────────────────────────── */
+
 function DoneStep({ summary }: { summary: Payload["summary"] }) {
   return (
     <div className="bg-[var(--panel)] border border-[var(--line)] rounded-2xl text-center p-[34px_24px]">
@@ -215,22 +514,17 @@ function DoneStep({ summary }: { summary: Payload["summary"] }) {
   );
 }
 
+/* ── Main Page ───────────────────────────────────────────────── */
+
 export default function ClientPage() {
   const [data, setData] = useState<Payload>(fallback);
   const [step, setStep] = useState(1);
   const [uploaded, setUploaded] = useState(false);
-  const [resolved, setResolved] = useState<number[]>([]);
+  const [uploadedFields, setUploadedFields] = useState<any[]>([]);
+  const [detectedChanges, setDetectedChanges] = useState<ChangeItem[]>([]);
+  const [changeUploads, setChangeUploads] = useState<Record<number, { filename: string; fields: any[] }>>({});
   const [logs, setLogs] = useState<string[]>([]);
-  const [filledValues, setFilledValues] = useState<string[]>([]);
-
-  useEffect(() => {
-    fetchPayload().then((p) => {
-      if (p) {
-        setData(p);
-        setFilledValues(Array(p.fill.length).fill(""));
-      }
-    });
-  }, []);
+  const [filledValues, setFilledValues] = useState<string[]>(() => Array(fallback.fill.length).fill(""));
 
   useEffect(() => {
     if (filledValues.length === 0 && data.fill.length > 0) {
@@ -307,10 +601,13 @@ export default function ClientPage() {
           {/* Steps */}
           {step === 1 && (
             <>
-              <UploadStep uploads={data.uploads} uploaded={uploaded} onUpload={() => setUploaded(true)} />
+              <UploadStep onUploadComplete={(uploads, fields) => {
+                setUploaded(true);
+                setUploadedFields(fields);
+              }} />
               {uploaded && (
                 <div className="flex justify-between items-center gap-3 mt-3 text-[13px] text-[var(--muted)]">
-                  <span>Structured fields and goals prepared for graph trace.</span>
+                  <span>Files uploaded. {uploadedFields.length} fields extracted. Ready for TinyFish trace.</span>
                   <button onClick={() => setStep(2)} className="px-4 py-[11px] rounded-[10px] font-semibold text-[13px] bg-[#171717] text-white">
                     Continue to Changes
                   </button>
@@ -319,17 +616,20 @@ export default function ClientPage() {
             </>
           )}
           {step === 2 && (
-            <>
-              <ChangeFeed changes={data.changes} />
-              <div className="flex justify-between items-center gap-3 mt-3 text-[13px] text-[var(--muted)]">
-                <span>Pipeline: compare hashes, run semantic diff, refresh changed graph branches</span>
-                <button onClick={() => setStep(3)} className="px-4 py-[11px] rounded-[10px] font-semibold text-[13px] bg-[#171717] text-white">
-                  Continue to Review
-                </button>
-              </div>
-            </>
+            <BrowsingStep onComplete={(changes, cu) => {
+              setDetectedChanges(changes);
+              setChangeUploads(cu);
+              setStep(3);
+            }} />
           )}
-          {step === 3 && <ReviewStep data={data} resolved={resolved} setResolved={setResolved} onContinue={() => setStep(4)} />}
+          {step === 3 && (
+            <ConsolidationStep
+              uploadedFields={uploadedFields}
+              changes={detectedChanges}
+              changeUploads={changeUploads}
+              onComplete={() => setStep(4)}
+            />
+          )}
           {step === 4 && <PortalStep fill={data.fill} filledValues={filledValues} logs={logs} />}
           {step === 5 && <DoneStep summary={data.summary} />}
         </div>

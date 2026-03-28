@@ -82,6 +82,36 @@ class TinyFishClient:
         # Stream ended without COMPLETE
         return {"error": "failed", "url": url}
 
+    # ── SSE streaming generator ────────────────────────────────
+
+    async def stream_single(
+        self, url: str, goal: str, browser_profile: str = "stealth"
+    ):
+        """Yield raw SSE event dicts (STARTED, STREAMING_URL, PROGRESS, COMPLETE)."""
+        payload = self._build_payload(url, goal, browser_profile)
+        timeout = httpx.Timeout(connect=10.0, read=300.0, write=10.0, pool=10.0)
+
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                async with client.stream(
+                    "POST", f"{BASE_URL}/automation/run-sse",
+                    json=payload, headers=self._headers
+                ) as response:
+                    response.raise_for_status()
+                    async for line in response.aiter_lines():
+                        line = line.strip()
+                        if not line or line.startswith(":"):
+                            continue
+                        if line.startswith("data: "):
+                            try:
+                                event = json.loads(line[6:])
+                            except json.JSONDecodeError:
+                                continue
+                            yield event
+        except (httpx.HTTPStatusError, httpx.TimeoutException) as e:
+            logger.error("stream_single failed for %s: %s", url, e)
+            yield {"type": "COMPLETE", "status": "FAILED", "error": str(e), "url": url}
+
     # ── Batch (run-batch + polling) ──────────────────────────────
 
     async def run_batch(
