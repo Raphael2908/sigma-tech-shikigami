@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regulator — Live Demo with Tinyfish</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#FAFAF8;--bg2:#F3F2EE;--bg3:#ECEAE4;--white:#FFFFFF;
+  --text:#1A1A1A;--text2:#4A4A4A;--text3:#7A7A7A;--text4:#A0A0A0;--text5:#C0C0C0;
+  --border:#E2E0DA;--border2:#D4D1C9;
+  --accent:#2D5BFF;--accent-soft:rgba(45,91,255,0.06);
+  --warm:#C4553A;--warm-soft:rgba(196,85,58,0.06);
+  --green:#2A7D5F;--green-soft:rgba(42,125,95,0.06);--green-soft2:rgba(42,125,95,0.15);
+  --amber:#9A7B2F;--amber-soft:rgba(154,123,47,0.08);
+  --tf:#0EA5E9;--tf-soft:rgba(14,165,233,0.06);--tf-soft2:rgba(14,165,233,0.12);
+  --sidebar-w:220px;
+  --serif:'Instrument Serif',Georgia,serif;--sans:'Plus Jakarta Sans',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+}
+html{font-size:14.5px}
+body{background:var(--bg2);color:var(--text);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased;height:100vh;overflow:hidden}
+::selection{background:var(--accent);color:#fff}
+button{font-family:var(--sans);cursor:pointer;border:none;background:none}
+
+.app{display:flex;height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.sidebar-logo{padding:1.1rem 1.15rem;font-family:var(--serif);font-size:1.25rem;color:var(--text);border-bottom:1px solid var(--border)}
+.sidebar-logo span{opacity:.3}
+.sidebar-nav{flex:1;padding:.65rem 0;overflow-y:auto}
+.sidebar-section{padding:0 .85rem;margin-bottom:.4rem}
+.sidebar-section-title{font-family:var(--mono);font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text4);padding:.4rem .2rem;margin-bottom:.1rem}
+.sb-item{display:flex;align-items:center;gap:.55rem;padding:.48rem .65rem;border-radius:7px;font-size:.78rem;color:var(--text2);transition:all .15s;cursor:pointer;width:100%;text-align:left}
+.sb-item:hover{background:var(--bg);color:var(--text)}
+.sb-item.active{background:var(--accent-soft);color:var(--accent)}
+.sb-icon{width:16px;height:16px;border-radius:4px;display:grid;place-items:center;font-size:.5rem;flex-shrink:0;font-weight:700}
+.sb-badge{margin-left:auto;font-family:var(--mono);font-size:.55rem;background:var(--warm);color:var(--white);padding:.08rem .35rem;border-radius:8px;font-weight:600}
+.sidebar-user{padding:.85rem 1rem;border-top:1px solid var(--border);display:flex;align-items:center;gap:.5rem}
+.user-av{width:26px;height:26px;border-radius:50%;background:var(--accent-soft);display:grid;place-items:center;font-size:.58rem;font-weight:700;color:var(--accent)}
+.user-name{font-size:.75rem;font-weight:600;color:var(--text)}
+.user-role{font-size:.65rem;color:var(--text4)}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:.65rem 1.25rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.breadcrumb{font-size:.78rem;color:var(--text3)}
+.breadcrumb strong{color:var(--text);font-weight:600}
+.topbar-btn{padding:.4rem 1rem;border-radius:7px;font-size:.75rem;font-weight:600;transition:all .2s}
+.topbar-btn.primary{background:var(--text);color:var(--white)}
+.topbar-btn.primary:hover{background:var(--accent)}
+.topbar-btn.tf-btn{background:var(--tf);color:var(--white)}
+.topbar-btn.tf-btn:hover{background:#0284C7}
+.topbar-btn.outline{border:1px solid var(--border);color:var(--text2)}
+.content{flex:1;overflow-y:auto;padding:1.25rem}
+
+.screen{display:none;animation:fadeIn .4s ease}
+.screen.visible{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* DASHBOARD */
+.dash-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem;margin-bottom:1.25rem}
+.ds{background:var(--white);border:1px solid var(--border);border-radius:9px;padding:1rem}
+.ds-label{font-size:.68rem;color:var(--text4);text-transform:uppercase;letter-spacing:.07em;font-weight:500;margin-bottom:.25rem}
+.ds-val{font-family:var(--serif);font-size:1.5rem;color:var(--text)}
+.ds-val.warn{color:var(--warm)}.ds-val.green{color:var(--green)}
+.sh{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:.85rem}
+.sh-t{font-family:var(--serif);font-size:1.05rem;color:var(--text)}
+.sh-link{font-size:.72rem;color:var(--accent);cursor:pointer;font-weight:500}
+
+.ct{width:100%;border-collapse:collapse;background:var(--white);border:1px solid var(--border);border-radius:9px;overflow:hidden}
+.ct th{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text4);text-align:left;padding:.6rem .85rem;border-bottom:1px solid var(--border);background:var(--bg)}
+.ct td{padding:.65rem .85rem;border-bottom:1px solid var(--bg2);font-size:.78rem;color:var(--text2)}
+.ct tr{transition:background .15s;cursor:pointer}
+.ct tbody tr:hover{background:var(--accent-soft)}
+.ct tr:last-child td{border:none}
+.cn{font-weight:600;color:var(--text)}
+.pill{font-family:var(--mono);font-size:.58rem;padding:.18rem .5rem;border-radius:4px;font-weight:500}
+.pill-due{background:var(--warm-soft);color:var(--warm)}
+.pill-ok{background:var(--green-soft);color:var(--green)}
+.ac{font-family:var(--mono);font-size:.68rem;font-weight:600;color:var(--warm)}
+
+/* CLIENT VIEW */
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;padding-bottom:.85rem;border-bottom:1px solid var(--border)}
+.ch h2{font-family:var(--serif);font-size:1.35rem;font-weight:400;margin-bottom:.15rem}
+.ch p{font-size:.78rem;color:var(--text3)}
+.cm{display:flex;gap:1.25rem}
+.cm-i{text-align:right}
+.cm-l{font-size:.6rem;color:var(--text4);text-transform:uppercase;letter-spacing:.07em}
+.cm-v{font-size:.82rem;font-weight:600;color:var(--text)}
+
+/* Steps bar */
+.steps-bar{display:flex;margin-bottom:1.25rem;background:var(--white);border:1px solid var(--border);border-radius:9px;overflow:hidden}
+.si{flex:1;padding:.6rem .75rem;text-align:center;font-size:.7rem;font-weight:500;color:var(--text4);border-right:1px solid var(--border);transition:all .3s}
+.si:last-child{border:none}
+.si.active{color:var(--accent);background:var(--accent-soft);font-weight:600}
+.si.done{color:var(--green);background:var(--green-soft)}
+.si .sn{font-family:var(--mono);font-size:.55rem;display:block;margin-bottom:.05rem}
+
+/* Change feed */
+.cf{background:var(--white);border:1px solid var(--border);border-radius:9px;margin-bottom:1rem;overflow:hidden}
+.cf-h{padding:.6rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg)}
+.cf-h span{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)}
+.fi{display:flex;gap:.7rem;padding:.85rem 1rem;border-bottom:1px solid var(--bg2);align-items:flex-start;animation:fadeIn .4s ease;animation-fill-mode:both}
+.fi:nth-child(2){animation-delay:.12s}.fi:nth-child(3){animation-delay:.24s}.fi:nth-child(4){animation-delay:.36s}
+.fi:last-child{border:none}
+.fi-icon{width:24px;height:24px;border-radius:6px;display:grid;place-items:center;flex-shrink:0;font-size:.65rem;font-weight:700}
+.fi-icon.warn{background:var(--warm-soft);color:var(--warm)}
+.fi-icon.info{background:var(--accent-soft);color:var(--accent)}
+.fi-icon.ok{background:var(--green-soft);color:var(--green)}
+.fi-t{font-size:.8rem;font-weight:600;color:var(--text);margin-bottom:.1rem}
+.fi-d{font-size:.72rem;color:var(--text3);line-height:1.5}
+.fi-m{font-family:var(--mono);font-size:.55rem;color:var(--text4);margin-top:.25rem}
+
+/* Upload */
+.upload-area{background:var(--white);border:2px dashed var(--border2);border-radius:10px;padding:2rem;text-align:center;cursor:pointer;transition:all .25s;margin-bottom:1rem}
+.upload-area:hover{border-color:var(--accent);background:var(--accent-soft)}
+.upload-area h3{font-family:var(--serif);font-size:1rem;margin-bottom:.25rem}
+.upload-area p{font-size:.78rem;color:var(--text3)}
+.ufiles{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1rem}
+.uf{display:flex;align-items:center;gap:.65rem;background:var(--white);border:1px solid var(--border);border-radius:7px;padding:.55rem .85rem;animation:fadeIn .3s ease}
+.uf-icon{width:28px;height:28px;border-radius:5px;display:grid;place-items:center;font-family:var(--mono);font-size:.5rem;font-weight:700;color:var(--white);flex-shrink:0}
+.uf-pdf{background:var(--warm)}.uf-xls{background:var(--green)}.uf-img{background:var(--accent)}
+.uf-info{flex:1}.uf-name{font-size:.78rem;font-weight:600;color:var(--text)}.uf-det{font-size:.62rem;color:var(--text4)}
+.uf-prog{width:70px;height:3px;background:var(--bg2);border-radius:2px;overflow:hidden}
+.uf-bar{height:100%;background:var(--accent);border-radius:2px;transition:width .6s ease}
+
+/* Form */
+.fp{background:var(--white);border:1px solid var(--border);border-radius:9px;overflow:hidden;margin-bottom:1rem}
+.fp-h{padding:.55rem 1rem;border-bottom:1px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:space-between}
+.fp-h span{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)}
+.fsl{font-family:var(--mono);font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text4);padding:.85rem 1rem .3rem}
+.ff{display:grid;grid-template-columns:160px 1fr 20px;gap:.6rem;padding:.45rem 1rem;border-bottom:1px solid var(--bg2);align-items:center}
+.ff:last-child{border:none}
+.ff-l{font-size:.75rem;color:var(--text3);font-weight:500}
+.ff-v{font-size:.78rem;color:var(--text);font-weight:500;padding:.3rem .55rem;background:var(--bg);border:1px solid var(--border);border-radius:5px}
+.ff-v.wbg{background:var(--warm-soft);border-color:rgba(196,85,58,0.18)}
+.ff-v.empty{color:var(--text4);font-style:italic;font-weight:400}
+.ff-d{width:16px;height:16px;border-radius:50%;display:grid;place-items:center;font-size:.5rem;font-weight:700}
+.dg{background:var(--green-soft);color:var(--green)}.da{background:var(--amber-soft);color:var(--amber)}.dr{background:var(--warm-soft);color:var(--warm)}
+
+.fflag{display:flex;gap:.55rem;margin:.4rem 1rem .85rem;padding:.65rem .75rem;border-radius:6px;align-items:flex-start;font-size:.74rem;line-height:1.5}
+.fflag.fw{background:var(--warm-soft);color:var(--text2)}.fflag.fi2{background:var(--amber-soft);color:var(--text2)}
+.fflag strong{color:var(--text)}
+.fr-btn{margin-top:.4rem;display:inline-block;font-size:.68rem;font-weight:600;color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+
+/* ===== BIZFILE+ SIMULATION ===== */
+.bizfile-wrapper{display:grid;grid-template-columns:1fr 280px;gap:1rem;height:calc(100vh - 180px)}
+.browser-frame{background:var(--white);border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.browser-bar{background:#F0F0F0;padding:.4rem .75rem;display:flex;align-items:center;gap:.5rem;border-bottom:1px solid #D8D8D8;flex-shrink:0}
+.bb-dots{display:flex;gap:4px}
+.bb-dot{width:8px;height:8px;border-radius:50%}
+.bb-r{background:#FF5F57}.bb-y{background:#FFBD2E}.bb-g{background:#27C93F}
+.bb-url{flex:1;background:#fff;border:1px solid #D8D8D8;border-radius:4px;padding:.25rem .6rem;font-family:var(--mono);font-size:.6rem;color:var(--text3);display:flex;align-items:center;gap:.35rem}
+.bb-url .lock{color:var(--green);font-size:.55rem}
+.browser-body{flex:1;overflow-y:auto;padding:0}
+
+/* BizFile+ mock UI */
+.biz{font-family:'Plus Jakarta Sans',Arial,sans-serif;font-size:.82rem;color:#333}
+.biz-header{background:#003D7C;padding:.65rem 1.25rem;display:flex;align-items:center;justify-content:space-between}
+.biz-logo{color:#fff;font-weight:700;font-size:.85rem;display:flex;align-items:center;gap:.4rem}
+.biz-logo img{height:18px}
+.biz-user{color:rgba(255,255,255,.7);font-size:.68rem}
+.biz-nav{background:#00579B;padding:.35rem 1.25rem;display:flex;gap:1.5rem}
+.biz-nav a{color:rgba(255,255,255,.8);font-size:.7rem;text-decoration:none;font-weight:500}
+.biz-nav a.active{color:#fff;border-bottom:2px solid #FFD700;padding-bottom:.2rem}
+.biz-content{padding:1.25rem}
+.biz-title{font-size:1rem;font-weight:700;color:#003D7C;margin-bottom:.2rem}
+.biz-sub{font-size:.72rem;color:#666;margin-bottom:1.25rem}
+.biz-section{margin-bottom:1.25rem}
+.biz-section-title{font-size:.78rem;font-weight:700;color:#003D7C;padding:.4rem .6rem;background:#E8F0FE;border-left:3px solid #003D7C;margin-bottom:.75rem}
+.biz-row{display:grid;grid-template-columns:180px 1fr;gap:.5rem;padding:.4rem .6rem;border-bottom:1px solid #EEE;align-items:center}
+.biz-row:last-child{border:none}
+.biz-label{font-size:.72rem;color:#555;font-weight:500}
+.biz-input{font-size:.78rem;color:#333;padding:.35rem .55rem;border:1px solid #CCC;border-radius:4px;background:#FAFAFA;min-height:28px;font-family:var(--sans);transition:all .3s}
+.biz-input.filling{border-color:var(--tf);background:var(--tf-soft);box-shadow:0 0 0 2px var(--tf-soft2)}
+.biz-input.filled{border-color:var(--green);background:rgba(42,125,95,0.04)}
+.biz-input.typing-cursor{border-right:2px solid var(--tf)}
+.biz-btn-row{padding:1rem .6rem;display:flex;gap:.5rem;justify-content:flex-end}
+.biz-btn{padding:.45rem 1.25rem;border-radius:4px;font-size:.75rem;font-weight:600;border:none;cursor:pointer;font-family:var(--sans)}
+.biz-btn-primary{background:#003D7C;color:#fff}.biz-btn-secondary{background:#E8E8E8;color:#333}
+
+/* Agent panel */
+.agent-panel{background:var(--white);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;overflow:hidden}
+.agent-header{padding:.75rem 1rem;border-bottom:1px solid var(--border);background:var(--bg);display:flex;align-items:center;gap:.5rem}
+.agent-header .tf-dot{width:8px;height:8px;border-radius:50%;background:var(--tf);animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.agent-header span{font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)}
+.agent-log{flex:1;overflow-y:auto;padding:.75rem}
+.agent-entry{padding:.4rem 0;border-bottom:1px solid var(--bg2);animation:fadeIn .3s ease}
+.agent-entry:last-child{border:none}
+.ae-time{font-family:var(--mono);font-size:.52rem;color:var(--text4)}
+.ae-text{font-size:.72rem;color:var(--text2);line-height:1.45;margin-top:.1rem}
+.ae-text strong{color:var(--text)}
+.ae-text .tf-highlight{color:var(--tf);font-weight:600}
+.agent-status{padding:.65rem 1rem;border-top:1px solid var(--border);background:var(--bg)}
+.as-row{display:flex;align-items:center;gap:.4rem;font-size:.7rem}
+.as-row .spinner{width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--tf);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.as-done{color:var(--green);font-weight:600}
+
+/* Timer */
+.timer{position:fixed;bottom:1rem;right:1rem;background:var(--white);border:1px solid var(--border);border-radius:9px;padding:.5rem .85rem;display:flex;align-items:center;gap:.55rem;box-shadow:0 4px 16px rgba(0,0,0,0.05);z-index:50}
+.timer-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite}
+.timer-l{font-size:.65rem;color:var(--text3)}
+.timer-v{font-family:var(--mono);font-size:1rem;font-weight:600;color:var(--text)}
+
+/* Summary */
+.sum{background:var(--white);border:2px solid var(--green);border-radius:11px;padding:1.75rem 2rem;text-align:center}
+.sum h3{font-family:var(--serif);font-size:1.4rem;font-weight:400;margin-bottom:.4rem}
+.sum p{font-size:.85rem;color:var(--text2);line-height:1.6}
+.sum-row{display:flex;justify-content:center;gap:2rem;margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border)}
+.sum-i{text-align:center}
+.sum-n{font-family:var(--serif);font-size:1.6rem;color:var(--green);display:block;line-height:1.1}
+.sum-l{font-size:.68rem;color:var(--text3);margin-top:.15rem}
+
+.hint{font-size:.74rem;color:var(--text4);display:flex;justify-content:space-between;align-items:center;margin-top:.5rem}
+.hint strong{color:var(--green)}
+.hint s{color:var(--warm)}
+
+@media(max-width:900px){
+  .sidebar{display:none}
+  .dash-stats{grid-template-columns:repeat(2,1fr)}
+  .bizfile-wrapper{grid-template-columns:1fr;height:auto}
+  .agent-panel{max-height:300px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-logo">Regulator<span>.</span></div>
+    <div class="sidebar-nav">
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Overview</div>
+        <button class="sb-item active" onclick="showScreen('dashboard')"><span class="sb-icon" style="background:var(--accent-soft);color:var(--accent)">◉</span>Dashboard<span class="sb-badge">3</span></button>
+        <button class="sb-item"><span class="sb-icon" style="background:var(--warm-soft);color:var(--warm)">⚡</span>Change Feed</button>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Clients</div>
+        <button class="sb-item" onclick="showScreen('client')"><span class="sb-icon" style="background:var(--warm-soft);color:var(--warm)">A</span>Apex Trading<span class="sb-badge">2</span></button>
+        <button class="sb-item"><span class="sb-icon" style="background:var(--green-soft);color:var(--green)">M</span>Meridian Capital</button>
+        <button class="sb-item"><span class="sb-icon" style="background:var(--bg2);color:var(--text3)">S</span>Straits Logistics</button>
+      </div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-av">RT</div>
+      <div><div class="user-name">Rachel Tan</div><div class="user-role">Senior QI</div></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="breadcrumb" id="bc"><span>Dashboard</span></div>
+      <div id="topbar-right"><button class="topbar-btn outline" style="font-size:.68rem;color:var(--text4)">27 Mar 2026, 9:04 AM</button></div>
+    </div>
+    <div class="content" id="content">
+
+      <!-- DASHBOARD -->
+      <div class="screen visible" id="screen-dashboard">
+        <div class="dash-stats">
+          <div class="ds"><div class="ds-label">Active clients</div><div class="ds-val">187</div></div>
+          <div class="ds"><div class="ds-label">Filings due</div><div class="ds-val warn">12</div></div>
+          <div class="ds"><div class="ds-label">Rule changes this week</div><div class="ds-val warn">3</div></div>
+          <div class="ds"><div class="ds-label">Completed</div><div class="ds-val green">34</div></div>
+        </div>
+        <div class="sh"><div class="sh-t">Filings Due Soon</div><span class="sh-link">View all →</span></div>
+        <table class="ct"><thead><tr><th>Client</th><th>Filing</th><th>Deadline</th><th>Status</th><th>Alerts</th></tr></thead>
+        <tbody>
+          <tr onclick="showScreen('client')"><td><span class="cn">Apex Trading Pte Ltd</span></td><td>ACRA Annual Return</td><td>30 Apr 2026</td><td><span class="pill pill-due">Due 34 days</span></td><td><span class="ac">⚠ 2 changes</span></td></tr>
+          <tr><td><span class="cn">Meridian Capital Advisory</span></td><td>MAS Form 1A</td><td>15 May 2026</td><td><span class="pill pill-ok">In progress</span></td><td><span class="ac">⚠ 5 changes</span></td></tr>
+          <tr><td><span class="cn">Horizon Marine Services</span></td><td>MOM EP Renewal (x3)</td><td>12 Apr 2026</td><td><span class="pill pill-due">Due 16 days</span></td><td><span class="ac">⚠ 1 update</span></td></tr>
+        </tbody></table>
+      </div>
+
+      <!-- CLIENT -->
+      <div class="screen" id="screen-client">
+        <div class="ch"><div><h2>Apex Trading Pte Ltd</h2><p>UEN 201912345A · ACRA Annual Return FY2025</p></div><div class="cm"><div class="cm-i"><div class="cm-l">Last filed</div><div class="cm-v">14 Mar 2025</div></div><div class="cm-i"><div class="cm-l">Deadline</div><div class="cm-v" style="color:var(--warm)">30 Apr 2026</div></div></div></div>
+        <div class="steps-bar" id="sbar">
+          <div class="si active" id="si1"><span class="sn">01</span>Changes</div>
+          <div class="si" id="si2"><span class="sn">02</span>Upload</div>
+          <div class="si" id="si3"><span class="sn">03</span>Review</div>
+          <div class="si" id="si4"><span class="sn">04</span>Auto-Fill</div>
+          <div class="si" id="si5"><span class="sn">05</span>Done</div>
+        </div>
+
+        <!-- P1: Changes -->
+        <div id="p1">
+          <div class="cf"><div class="cf-h"><span>Changes since last filing (14 Mar 2025)</span><span style="font-size:.68rem;color:var(--green)">Verified today 9:02 AM</span></div>
+            <div class="fi"><div class="fi-icon warn">!</div><div><div class="fi-t">New: RONS/ROND registers now mandatory</div><div class="fi-d">Annual Return includes compliance declaration for nominee registers. Not required in your last filing.</div><div class="fi-m">16 Jun 2025 · Penalty: up to S$25,000</div></div></div>
+            <div class="fi"><div class="fi-icon warn">!</div><div><div class="fi-t">CSP Act 2024 AML/CFT obligations</div><div class="fi-d">Source-of-wealth verification required before filing. Confirm records are current.</div><div class="fi-m">9 Jun 2025 · Corporate Service Providers Act 2024</div></div></div>
+            <div class="fi"><div class="fi-icon info">i</div><div><div class="fi-t">BizFile+ portal redesigned</div><div class="fi-d">Interface updated December 2024. Form template aligned.</div><div class="fi-m">Dec 2024 · ACRA BizFile+</div></div></div>
+            <div class="fi"><div class="fi-icon ok">✓</div><div><div class="fi-t">No changes to: deadlines, AGM rules, FYE requirements</div><div class="fi-d">All other requirements unchanged.</div><div class="fi-m">Verified today</div></div></div>
+          </div>
+          <div class="hint"><span>⏱ <strong>30 seconds</strong>. Manual: <s>25-40 min</s></span><button class="topbar-btn primary" onclick="goP(2)">Continue to Upload →</button></div>
+        </div>
+
+        <!-- P2: Upload -->
+        <div id="p2" style="display:none">
+          <div class="upload-area" id="uz" onclick="simUpload()"><h3>Drop client documents here</h3><p>PDF, XLSX, JPG — auto-extraction on upload</p></div>
+          <div class="ufiles" id="ufiles"></div>
+          <div id="uact" style="display:none" class="hint"><span>⏱ <strong>2 minutes</strong>. Manual: <s>10-15 min</s></span><button class="topbar-btn primary" onclick="goP(3)">Continue to Review →</button></div>
+        </div>
+
+        <!-- P3: Review -->
+        <div id="p3" style="display:none">
+          <div class="fp"><div class="fp-h"><span>Pre-populated Draft</span><span style="font-size:.65rem;color:var(--green)">23 fields extracted</span></div>
+            <div class="fsl">Company Particulars</div>
+            <div class="ff"><span class="ff-l">Company name</span><span class="ff-v">Apex Trading Pte Ltd</span><span class="ff-d dg">✓</span></div>
+            <div class="ff"><span class="ff-l">UEN</span><span class="ff-v">201912345A</span><span class="ff-d dg">✓</span></div>
+            <div class="ff"><span class="ff-l">Registered address</span><span class="ff-v">71 Robinson Rd #14-01, S(068895)</span><span class="ff-d dg">✓</span></div>
+            <div class="ff"><span class="ff-l">Financial year-end</span><span class="ff-v">31 December 2025</span><span class="ff-d dg">✓</span></div>
+            <div class="ff"><span class="ff-l">AGM date</span><span class="ff-v">15 March 2026</span><span class="ff-d dg">✓</span></div>
+            <div class="ff"><span class="ff-l">Revenue</span><span class="ff-v">S$2,847,300</span><span class="ff-d da">?</span></div>
+            <div class="fsl">Directors & Shareholders</div>
+            <div class="ff"><span class="ff-l">Director 1</span><span class="ff-v">Lim Kai Wen (S8XXXXXXXA)</span><span class="ff-d dg">✓</span></div>
+            <div class="ff"><span class="ff-l">Director 2</span><span class="ff-v">Chen Wei Ming (A52XXXXXX)</span><span class="ff-d da">?</span></div>
+            <div class="fsl" style="color:var(--warm)">⚠ Nominee Registers (New)</div>
+            <div class="ff" id="rf1"><span class="ff-l">RONS maintained?</span><span class="ff-v wbg empty">Not declared</span><span class="ff-d dr">!</span></div>
+            <div class="ff" id="rf2"><span class="ff-l">ROND maintained?</span><span class="ff-v wbg empty">Not declared</span><span class="ff-d dr">!</span></div>
+            <div class="fflag fw" id="fl1"><span>⚠</span><div><strong>Action:</strong> Confirm with client re Apex Holdings Ltd (BVI) nominee status.<br><span class="fr-btn" onclick="resolve1()">✓ Resolved — no nominees</span></div></div>
+            <div class="fflag fi2" id="fl2"><span>ℹ</span><div><strong>Note:</strong> Director Chen Wei Ming passport expires Aug 2026.<br><span class="fr-btn" onclick="resolve2()">✓ Client notified</span></div></div>
+          </div>
+          <div class="hint"><span>⏱ <strong>~6 min</strong>. Manual: <s>20-25 min</s></span><button class="topbar-btn tf-btn" id="fill-btn" onclick="goP(4)" style="opacity:.4;pointer-events:none">🐟 Auto-Fill BizFile+ with Tinyfish →</button></div>
+        </div>
+
+        <!-- P4: BizFile+ Auto-Fill -->
+        <div id="p4" style="display:none">
+          <div class="bizfile-wrapper">
+            <div class="browser-frame">
+              <div class="browser-bar">
+                <div class="bb-dots"><span class="bb-dot bb-r"></span><span class="bb-dot bb-y"></span><span class="bb-dot bb-g"></span></div>
+                <div class="bb-url"><span class="lock">🔒</span> www.bizfile.gov.sg/ngbbizfileinternet/faces/oracle/webcenter/portalapp/ar</div>
+              </div>
+              <div class="browser-body">
+                <div class="biz">
+                  <div class="biz-header"><div class="biz-logo">🏛 BizFile+</div><div class="biz-user">Rachel Tan · CorpPass</div></div>
+                  <div class="biz-nav"><a href="#">Home</a><a href="#">My Submissions</a><a class="active" href="#">File Annual Return</a><a href="#">Help</a></div>
+                  <div class="biz-content">
+                    <div class="biz-title">Annual Return for Apex Trading Pte Ltd</div>
+                    <div class="biz-sub">UEN: 201912345A · Financial Year Ended: 31 December 2025</div>
+                    <div class="biz-section">
+                      <div class="biz-section-title">Section A: Company Information</div>
+                      <div class="biz-row"><span class="biz-label">Company Name</span><span class="biz-input" id="bf-1"></span></div>
+                      <div class="biz-row"><span class="biz-label">UEN</span><span class="biz-input" id="bf-2"></span></div>
+                      <div class="biz-row"><span class="biz-label">Registered Address</span><span class="biz-input" id="bf-3"></span></div>
+                      <div class="biz-row"><span class="biz-label">Financial Year End</span><span class="biz-input" id="bf-4"></span></div>
+                      <div class="biz-row"><span class="biz-label">Date of AGM</span><span class="biz-input" id="bf-5"></span></div>
+                      <div class="biz-row"><span class="biz-label">Revenue (S$)</span><span class="biz-input" id="bf-6"></span></div>
+                    </div>
+                    <div class="biz-section">
+                      <div class="biz-section-title">Section B: Directors</div>
+                      <div class="biz-row"><span class="biz-label">Director 1</span><span class="biz-input" id="bf-7"></span></div>
+                      <div class="biz-row"><span class="biz-label">Director 2</span><span class="biz-input" id="bf-8"></span></div>
+                    </div>
+                    <div class="biz-section">
+                      <div class="biz-section-title">Section C: Nominee Registers (New)</div>
+                      <div class="biz-row"><span class="biz-label">RONS maintained?</span><span class="biz-input" id="bf-9"></span></div>
+                      <div class="biz-row"><span class="biz-label">ROND maintained?</span><span class="biz-input" id="bf-10"></span></div>
+                      <div class="biz-row"><span class="biz-label">Nominee shareholders?</span><span class="biz-input" id="bf-11"></span></div>
+                    </div>
+                    <div class="biz-btn-row">
+                      <button class="biz-btn biz-btn-secondary">Save Draft</button>
+                      <button class="biz-btn biz-btn-primary" id="biz-submit" style="opacity:.4">Review & Submit</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="agent-panel">
+              <div class="agent-header"><div class="tf-dot"></div><span>Tinyfish Agent</span></div>
+              <div class="agent-log" id="agent-log"></div>
+              <div class="agent-status" id="agent-status"><div class="as-row"><div class="spinner"></div><span style="font-size:.72rem;color:var(--text3)">Initializing agent...</span></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- P5: Done -->
+        <div id="p5" style="display:none">
+          <div class="sum">
+            <div style="font-size:2rem;margin-bottom:.4rem">✅</div>
+            <h3>Filed in 12 minutes. Powered by Tinyfish.</h3>
+            <p>All 23 fields populated, 2 rule changes caught, RONS/ROND compliance verified, and form submitted via BizFile+.</p>
+            <div class="sum-row">
+              <div class="sum-i"><span class="sum-n">43 min</span><span class="sum-l">saved vs manual</span></div>
+              <div class="sum-i"><span class="sum-n">S$25K</span><span class="sum-l">penalty avoided</span></div>
+              <div class="sum-i"><span class="sum-n">11</span><span class="sum-l">fields auto-filled</span></div>
+              <div class="sum-i"><span class="sum-n">0</span><span class="sum-l">manual keystrokes</span></div>
+            </div>
+          </div>
+          <div style="margin-top:1rem;display:flex;gap:.5rem;justify-content:center">
+            <button class="topbar-btn primary" onclick="showScreen('dashboard')">Back to Dashboard</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="timer" id="timer" style="display:none"><div class="timer-dot"></div><div><div class="timer-l">Elapsed</div><div class="timer-v" id="tv">0:00</div></div></div>
+
+<script>
+let tInt=null,tSec=0,fRes=0;
+function showScreen(n){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('visible'));document.getElementById('screen-'+n).classList.add('visible');if(n==='dashboard'){document.getElementById('bc').innerHTML='<span>Dashboard</span>';document.getElementById('timer').style.display='none';stp();}if(n==='client'){document.getElementById('bc').innerHTML='<span style="color:var(--text4);cursor:pointer" onclick="showScreen(\'dashboard\')">Dashboard</span><span style="color:var(--text4)"> / </span><strong>Apex Trading</strong>';document.getElementById('timer').style.display='flex';rst();strt();resetP();}}
+
+function resetP(){fRes=0;for(let i=1;i<=5;i++)document.getElementById('p'+i).style.display=i===1?'block':'none';['si1','si2','si3','si4','si5'].forEach((id,i)=>{document.getElementById(id).className='si'+(i===0?' active':'');});document.getElementById('ufiles').innerHTML='';document.getElementById('uact').style.display='none';document.getElementById('uz').style.display='block';const b=document.getElementById('fill-btn');b.style.opacity='.4';b.style.pointerEvents='none';document.getElementById('fl1').style.display='flex';document.getElementById('fl2').style.display='flex';document.getElementById('rf1').innerHTML='<span class="ff-l">RONS maintained?</span><span class="ff-v wbg empty">Not declared</span><span class="ff-d dr">!</span>';document.getElementById('rf2').innerHTML='<span class="ff-l">ROND maintained?</span><span class="ff-v wbg empty">Not declared</span><span class="ff-d dr">!</span>';for(let i=1;i<=11;i++){const el=document.getElementById('bf-'+i);if(el){el.textContent='';el.className='biz-input';}}document.getElementById('agent-log').innerHTML='';document.getElementById('biz-submit').style.opacity='.4';}
+
+function goP(n){for(let i=1;i<=5;i++){document.getElementById('p'+i).style.display=i===n?'block':'none';const s=document.getElementById('si'+i);if(i<n)s.className='si done';else if(i===n)s.className='si active';else s.className='si';}document.querySelector('.content').scrollTop=0;if(n===4)startBizFill();if(n===5)stp();}
+
+const files=[{n:'ACRA_BizProfile.pdf',s:'142 KB',t:'pdf',e:'UEN, directors, address'},{n:'Apex_FS_FY2025.xlsx',s:'89 KB',t:'xls',e:'Revenue, assets, solvency'},{n:'AGM_Minutes.pdf',s:'67 KB',t:'pdf',e:'AGM date, resolutions'},{n:'Passport_LimKW.jpg',s:'1.2 MB',t:'img',e:'Name, passport, expiry'}];
+function simUpload(){document.getElementById('uz').style.display='none';const c=document.getElementById('ufiles');c.innerHTML='';files.forEach((f,i)=>{setTimeout(()=>{const cls=f.t==='pdf'?'uf-pdf':f.t==='xls'?'uf-xls':'uf-img';const el=document.createElement('div');el.className='uf';el.innerHTML=`<div class="uf-icon ${cls}">${f.t.toUpperCase()}</div><div class="uf-info"><div class="uf-name">${f.n}</div><div class="uf-det">${f.s}</div></div><div id="fs${i}"><div class="uf-prog"><div class="uf-bar" id="fp${i}" style="width:0%"></div></div></div>`;c.appendChild(el);setTimeout(()=>document.getElementById('fp'+i).style.width='100%',40);setTimeout(()=>{document.getElementById('fs'+i).innerHTML=`<span style="font-size:.7rem;font-weight:500;color:var(--green)">✓ ${f.e}</span>`;},1100);if(i===files.length-1)setTimeout(()=>{document.getElementById('uact').style.display='flex';},1600);},i*500);});}
+
+function resolve1(){document.getElementById('fl1').style.display='none';document.getElementById('rf1').innerHTML='<span class="ff-l">RONS maintained?</span><span class="ff-v">Yes — no nominees</span><span class="ff-d dg">✓</span>';document.getElementById('rf2').innerHTML='<span class="ff-l">ROND maintained?</span><span class="ff-v">Yes — no nominees</span><span class="ff-d dg">✓</span>';fRes++;chk();}
+function resolve2(){document.getElementById('fl2').style.display='none';fRes++;chk();}
+function chk(){if(fRes>=2){const b=document.getElementById('fill-btn');b.style.opacity='1';b.style.pointerEvents='auto';}}
+
+// BIZFILE+ AUTO-FILL WITH TINYFISH
+const bfData=[
+  {id:'bf-1',val:'Apex Trading Pte Ltd',label:'Company Name'},
+  {id:'bf-2',val:'201912345A',label:'UEN'},
+  {id:'bf-3',val:'71 Robinson Road #14-01, Singapore 068895',label:'Registered Address'},
+  {id:'bf-4',val:'31 December 2025',label:'Financial Year End'},
+  {id:'bf-5',val:'15 March 2026',label:'Date of AGM'},
+  {id:'bf-6',val:'2,847,300',label:'Revenue'},
+  {id:'bf-7',val:'Lim Kai Wen (S8XXXXXXXA) — Singaporean',label:'Director 1'},
+  {id:'bf-8',val:'Chen Wei Ming (A52XXXXXX) — Malaysian',label:'Director 2'},
+  {id:'bf-9',val:'Yes',label:'RONS maintained'},
+  {id:'bf-10',val:'Yes',label:'ROND maintained'},
+  {id:'bf-11',val:'No',label:'Nominee shareholders'},
+];
+
+function addLog(text,time){
+  const log=document.getElementById('agent-log');
+  const el=document.createElement('div');el.className='agent-entry';
+  el.innerHTML=`<div class="ae-time">${time||getTime()}</div><div class="ae-text">${text}</div>`;
+  log.appendChild(el);log.scrollTop=log.scrollHeight;
+}
+function getTime(){const m=Math.floor(tSec/60);const s=tSec%60;return m+':'+(s<10?'0':'')+s;}
+
+function startBizFill(){
+  const log=document.getElementById('agent-log');log.innerHTML='';
+  const st=document.getElementById('agent-status');
+  st.innerHTML='<div class="as-row"><div class="spinner"></div><span style="font-size:.72rem;color:var(--text3)">Connecting to BizFile+...</span></div>';
+
+  // Reset fields
+  for(let i=1;i<=11;i++){const el=document.getElementById('bf-'+i);if(el){el.textContent='';el.className='biz-input';}}
+  document.getElementById('biz-submit').style.opacity='.4';
+
+  setTimeout(()=>addLog('<span class="tf-highlight">Tinyfish</span> agent initialized. Connecting to authenticated BizFile+ session...'),400);
+  setTimeout(()=>{addLog('Session found. <strong>CorpPass: Rachel Tan</strong>. Navigating to Annual Return form...');st.innerHTML='<div class="as-row"><div class="spinner"></div><span style="font-size:.72rem;color:var(--tf)">Navigating form...</span></div>';},1400);
+  setTimeout(()=>addLog('Form loaded. Beginning auto-fill with <strong>11 verified fields</strong> from Regulator...'),2400);
+
+  let delay=3000;
+  bfData.forEach((field,i)=>{
+    const typeDelay=delay;
+    const typeDuration=Math.max(400,field.val.length*35);
+    setTimeout(()=>{
+      const el=document.getElementById(field.id);
+      el.className='biz-input filling';
+      el.scrollIntoView({behavior:'smooth',block:'nearest'});
+      addLog(`Filling: <strong>${field.label}</strong> → <span class="tf-highlight">${field.val}</span>`);
+      st.innerHTML=`<div class="as-row"><div class="spinner"></div><span style="font-size:.72rem;color:var(--tf)">Filling ${field.label}...</span></div>`;
+      // Type animation
+      let chars=0;
+      const typeInt=setInterval(()=>{
+        chars+=2;
+        el.textContent=field.val.substring(0,Math.min(chars,field.val.length));
+        if(chars>=field.val.length){
+          clearInterval(typeInt);
+          el.className='biz-input filled';
+        }
+      },35);
+    },typeDelay);
+    delay+=typeDuration+350;
+  });
+
+  // Complete
+  setTimeout(()=>{
+    document.getElementById('agent-status').innerHTML='<div class="as-row"><span class="as-done">✓ All 11 fields filled successfully</span></div>';
+    addLog('<span class="tf-highlight">✓ Complete.</span> All fields populated. Awaiting Rachel\'s review before submission.');
+    document.getElementById('biz-submit').style.opacity='1';
+    setTimeout(()=>{
+      addLog('Rachel clicks <strong>Review & Submit</strong>. Filing submitted to ACRA.');
+      setTimeout(()=>goP(5),1500);
+    },2500);
+  },delay+500);
+}
+
+function strt(){tInt=setInterval(()=>{tSec++;const m=Math.floor(tSec/60);const s=tSec%60;document.getElementById('tv').textContent=m+':'+(s<10?'0':'')+s;},1000);}
+function stp(){clearInterval(tInt);}
+function rst(){stp();tSec=0;document.getElementById('tv').textContent='0:00';}
+</script>
+</body>
+</html>

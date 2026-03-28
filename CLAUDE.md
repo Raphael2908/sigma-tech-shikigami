@@ -270,7 +270,15 @@ diff: material        → confidence: "review_required",  review: True
 diff: ambiguous       → confidence: "review_required",  review: True
 diff: cosmetic        → confidence: "high",             review: False
 status: error_404     → confidence: "missing",          review: True
+status: error_other   → confidence: "missing",          review: True
 no node for field     → confidence: "missing",          review: True
+
+Implementation notes:
+- fill_form(form, extraction_results, diff_results) -> dict (synchronous, no I/O)
+- Output includes: form_id, form_name, filled_at, fields[], summary{total, high, review_required, missing}
+- Multiple nodes per field: prefers successful ER over error ER
+- Changed node with no DiffResult: falls back to "review_required" (safety net)
+- _classify() pure function implements all confidence rules
 
 Phase 8 — Orchestration
 Goal: Wire all layers into a single run.py entry point.
@@ -355,3 +363,6 @@ Note: asyncio is stdlib, not a pip package — removed from requirements.
 - First-time extractions skip OpenAI diff, return synthetic "material" DiffResult
 - OpenAI diff failures fall back to "ambiguous" (conservative for human review)
 - Monkeypatching import-by-name: patch the consuming module's reference, not the source module
+- fill_form is synchronous (no I/O) — pure data mapping with confidence classification
+- Multiple nodes per field: successful ER preferred over error ER
+- Output includes summary block for quick review-needed checks
