@@ -2,7 +2,7 @@
 
 ## Industry Validation
 
-![LinkedIn validation from Daniel Leung, Country Manager at ACCA Singapore](assets/validation.jpg)
+![LinkedIn validation from Daniel Leung, Country Manager at ACCA Singapore](validation.jpg)
 
 > *"Would be interesting to hear more especially with our ACCA Singapore leaders in this space."*
 > — **Daniel Leung FCCA MSID**, Country Manager | Banker | Speaker | Writer, ACCA Singapore
