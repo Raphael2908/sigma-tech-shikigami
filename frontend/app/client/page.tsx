@@ -299,7 +299,7 @@ export default function ClientPage() {
 
           {/* Stepper */}
           <div className="grid grid-cols-5 bg-white border border-[var(--line)] rounded-[14px] overflow-hidden mb-4">
-            {["01 Changes", "02 Upload", "03 Review", "04 Simulate Fill", "05 Done"].map((label, i) => (
+            {["01 Upload", "02 Changes", "03 Review", "04 Simulate Fill", "05 Done"].map((label, i) => (
               <div key={label} className={stepClass(i + 1)}>{label}</div>
             ))}
           </div>
@@ -307,26 +307,26 @@ export default function ClientPage() {
           {/* Steps */}
           {step === 1 && (
             <>
-              <ChangeFeed changes={data.changes} />
-              <div className="flex justify-between items-center gap-3 mt-3 text-[13px] text-[var(--muted)]">
-                <span>Pipeline: compare hashes, run semantic diff, refresh changed graph branches</span>
-                <button onClick={() => setStep(2)} className="px-4 py-[11px] rounded-[10px] font-semibold text-[13px] bg-[#171717] text-white">
-                  Continue to Upload
-                </button>
-              </div>
-            </>
-          )}
-          {step === 2 && (
-            <>
               <UploadStep uploads={data.uploads} uploaded={uploaded} onUpload={() => setUploaded(true)} />
               {uploaded && (
                 <div className="flex justify-between items-center gap-3 mt-3 text-[13px] text-[var(--muted)]">
                   <span>Structured fields and goals prepared for graph trace.</span>
-                  <button onClick={() => setStep(3)} className="px-4 py-[11px] rounded-[10px] font-semibold text-[13px] bg-[#171717] text-white">
-                    Continue to Review
+                  <button onClick={() => setStep(2)} className="px-4 py-[11px] rounded-[10px] font-semibold text-[13px] bg-[#171717] text-white">
+                    Continue to Changes
                   </button>
                 </div>
               )}
+            </>
+          )}
+          {step === 2 && (
+            <>
+              <ChangeFeed changes={data.changes} />
+              <div className="flex justify-between items-center gap-3 mt-3 text-[13px] text-[var(--muted)]">
+                <span>Pipeline: compare hashes, run semantic diff, refresh changed graph branches</span>
+                <button onClick={() => setStep(3)} className="px-4 py-[11px] rounded-[10px] font-semibold text-[13px] bg-[#171717] text-white">
+                  Continue to Review
+                </button>
+              </div>
             </>
           )}
           {step === 3 && <ReviewStep data={data} resolved={resolved} setResolved={setResolved} onContinue={() => setStep(4)} />}
