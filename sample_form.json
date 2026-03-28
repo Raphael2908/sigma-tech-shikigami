@@ -1,0 +1,18 @@
+{
+  "form_id": "MAS_AML_MVP",
+  "form_name": "AML/CFT Compliance Basics",
+  "fields": [
+    {
+      "field_id": "min_paid_up_capital",
+      "description": "Minimum paid-up capital requirement for a CMS licensee"
+    },
+    {
+      "field_id": "reporting_threshold",
+      "description": "Transaction reporting threshold for AML purposes in SGD"
+    },
+    {
+      "field_id": "beneficial_ownership_threshold",
+      "description": "Percentage threshold for beneficial ownership disclosure"
+    }
+  ]
+}
