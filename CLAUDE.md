@@ -203,6 +203,15 @@ def hash_json(data: dict) -> str:
 
 **Test:** Run against the seeded nodes. Confirm results come back and hashes are stored.
 
+Implementation notes:
+- parallel_extract(nodes, db_path?) -> list[ExtractionResult]
+- ExtractionResult dataclass lives in layer2_extract.py (transient, not in models.py)
+- Batches chunked at 100 (TinyFish API limit)
+- On error: updates only last_extracted_at, preserves content_hash and last_extracted_json
+- On success: updates all 3 fields + calls save_version for audit trail
+- All errors classified as "error_other" — 404 detection deferred to Phase 9
+- hash_json reused from graph/utils.py
+
 ---
 
 ## Phase 6 — Layer 3: Semantic Diff
@@ -329,3 +338,7 @@ Note: asyncio is stdlib, not a pip package — removed from requirements.
 - Canary first run = "stable" (baseline establishment, not false alarm)
 - Canary on fetch error = "changed" but stored hash preserved (no corrupt baseline)
 - Tests mock TinyFishClient.run_single via monkeypatch for fast offline testing
+- ExtractionResult is a transient dataclass in layer2_extract.py, not in graph/models.py
+- Error results: only last_extracted_at updated, content_hash/json preserved (same pattern as canary)
+- save_version called for all successful extractions (unchanged + changed) for full audit trail
+- Batch chunked at 100 to respect TinyFish API limit
