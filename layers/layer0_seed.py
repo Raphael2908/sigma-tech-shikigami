@@ -7,23 +7,21 @@ from clients.openai_client import chat_json
 
 logger = logging.getLogger(__name__)
 
-SEED_SYSTEM_PROMPT = """You are a regulatory compliance assistant. Given this MAS compliance form,
+SEED_SYSTEM_PROMPT = """You are a regulatory compliance assistant. Given this compliance form definition,
 produce a JSON with:
-1. seed_url: the MAS URL to start navigation from
-2. For each field, a target URL on mas.gov.sg and a plain English extraction goal
+1. seed_url: the government/regulatory authority URL to start navigation from
+2. For each field, a target URL on the authority's website and a plain English extraction goal
 
 Return ONLY valid JSON, no markdown, no preamble.
 
-Form: {form_json}
-
 Return format:
 {
-  "seed_url": "https://www.mas.gov.sg/regulation",
+  "seed_url": "https://www.example.gov.sg/...",
   "nodes": [
     {
       "field_id": "...",
       "url": "...",
-      "extraction_goal": "Find ... Return JSON: { value, currency, source_url, effective_date }"
+      "extraction_goal": "Find ... Return JSON with the relevant details."
     }
   ]
 }"""
@@ -60,7 +58,7 @@ async def seed_graph(form_path: str, db_path: str | None = None) -> list[Node]:
     # Write seed node (depth 0)
     seed_node = Node(
         url=seed_url,
-        extraction_goal="Navigation seed - MAS regulation landing page",
+        extraction_goal=f"Navigation seed - {form.get('form_name', 'regulatory')} landing page",
         depth_from_seed=0,
     )
     await upsert_node(seed_node, db_path)

@@ -106,6 +106,24 @@ async def save_version(node_id: int, hash: str, json_str: str, db_path: str | No
         await db.commit()
 
 
+async def update_node_url(old_url: str, new_url: str, db_path: str | None = None) -> bool:
+    """Update a node's URL in place, preserving row ID and version history.
+
+    Returns True on success, False if old_url not found or new_url conflicts.
+    """
+    db_path = await _get_db_path(db_path)
+    try:
+        async with aiosqlite.connect(db_path) as db:
+            cursor = await db.execute(
+                "UPDATE nodes SET url = ? WHERE url = ?",
+                (new_url, old_url),
+            )
+            await db.commit()
+            return cursor.rowcount > 0
+    except Exception:
+        return False
+
+
 async def get_prior_version(node_id: int, db_path: str | None = None) -> str | None:
     """Get the second-most-recent extracted_json from node_versions.
 

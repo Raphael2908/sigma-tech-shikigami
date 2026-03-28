@@ -1,18 +1,26 @@
 {
-  "form_id": "MAS_AML_MVP",
-  "form_name": "AML/CFT Compliance Basics",
+  "form_id": "ACRA_WITHDRAWAL_LIQUIDATOR",
+  "form_name": "Withdrawal from Being Approved Liquidators",
   "fields": [
     {
-      "field_id": "min_paid_up_capital",
-      "description": "Minimum paid-up capital requirement for a CMS licensee"
+      "field_id": "lodgement_description",
+      "description": "Correct description/wording for withdrawal from approved liquidators lodgement on BizFile+"
     },
     {
-      "field_id": "reporting_threshold",
-      "description": "Transaction reporting threshold for AML purposes in SGD"
+      "field_id": "required_form_pdf",
+      "description": "Which PDF form must be downloaded and attached for withdrawal from approved liquidators"
     },
     {
-      "field_id": "beneficial_ownership_threshold",
-      "description": "Percentage threshold for beneficial ownership disclosure"
+      "field_id": "required_supporting_docs",
+      "description": "List of supporting documents required for withdrawal from approved liquidators"
+    },
+    {
+      "field_id": "eligibility_criteria",
+      "description": "Eligibility criteria and prerequisites for withdrawing as an approved liquidator"
+    },
+    {
+      "field_id": "applicable_fees",
+      "description": "Filing fees for withdrawal from approved liquidators on BizFile+"
     }
   ]
 }

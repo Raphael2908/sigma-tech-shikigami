@@ -1,6 +1,6 @@
 import logging
 
-from config import MAS_SEED_URL
+from config import SEED_URL
 from clients.tinyfish import TinyFishClient
 from graph import init_db, get_meta, set_meta, hash_json
 
@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 async def check_canary(db_path: str | None = None) -> dict:
-    """Fetch MAS regulation page, hash it, compare against stored hash.
+    """Fetch seed page, hash it, compare against stored hash.
 
     Returns {"status": "stable"|"changed", "should_block": False}.
     Never blocks — only flags changes.
@@ -17,7 +17,7 @@ async def check_canary(db_path: str | None = None) -> dict:
 
     client = TinyFishClient()
     result = await client.run_single(
-        url=MAS_SEED_URL,
+        url=SEED_URL,
         goal="Return the top-level navigation links on this page as a JSON array of {text, href} objects",
     )
 
@@ -36,7 +36,7 @@ async def check_canary(db_path: str | None = None) -> dict:
         logger.info("Canary: stable (hash unchanged)")
         status = "stable"
     else:
-        logger.warning("Canary: MAS page structure CHANGED (old=%s new=%s)", stored_hash[:12], current_hash[:12])
+        logger.warning("Canary: page structure CHANGED (old=%s new=%s)", stored_hash[:12], current_hash[:12])
         print("MAINTENANCE NEEDED")
         status = "changed"
 

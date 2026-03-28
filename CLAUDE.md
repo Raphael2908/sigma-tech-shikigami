@@ -328,6 +328,16 @@ Tell Claude Code:
 
 This is additive — add it after everything else works.
 
+Implementation notes:
+- repair_404(error_results, db_path?) -> list[ExtractionResult] — parallel via asyncio.gather
+- Integrated into parallel_extract() — runs automatically after main batch, transparent to run.py
+- Skips nodes with parent_url=None (seed nodes can't be repaired)
+- MAX_REPAIRS=5 cap per run to control API costs (each repair = 2 TinyFish calls)
+- update_node_url(old_url, new_url) added to store.py — direct UPDATE preserving row ID and version history
+- Repair goal asks TinyFish to return JSON with 'new_url' and 'content' keys
+- Validates new_url is a string starting with "http" before proceeding
+- On any failure (repair call, URL update, re-extraction): returns original error result unchanged
+
 Environment Setup (implemented):
 python# config.py
 import os
@@ -374,3 +384,46 @@ Note: asyncio is stdlib, not a pip package — removed from requirements.
 - fill_form is synchronous (no I/O) — pure data mapping with confidence classification
 - Multiple nodes per field: successful ER preferred over error ER
 - Output includes summary block for quick review-needed checks
+- update_node_url in store.py does direct UPDATE (preserves row ID + version history, no ON CONFLICT)
+- repair_404 integrated into parallel_extract — transparent to orchestrator
+- MAX_REPAIRS=5 cap per run to control TinyFish API costs
+- Repair skips nodes without parent_url
+
+## Addendum - Updated Demo User Flow
+
+### ACRA Demo Flow: Withdrawal From Being Approved Liquidators
+
+1. **User uploads the target form**
+   - The run starts from the ACRA withdrawal form the user wants completed.
+
+2. **OpenAI preprocesses the uploaded form**
+   - The form is converted into structured fields and extraction goals.
+   - These goals and fields become the inputs for graph seeding and TinyFish.
+
+3. **The system seeds or updates the knowledge graph**
+   - The graph stores relevant ACRA pages, relationships, and field mappings.
+   - If this workflow has not been seeded before, the graph is initialized for this form type.
+
+4. **TinyFish traces the ACRA website**
+   - TinyFish receives both the extraction goals and the structured fields as context.
+   - It uses the graph to navigate deeply nested ACRA pages and extract relevant information.
+
+5. **The system compares results against version history**
+   - Extracted content is hashed and compared with prior stored versions.
+   - This determines whether content is unchanged or changed.
+
+6. **If changes are found, the frontend reflects them**
+   - The frontend shows detected changes for user review.
+   - The backend also refreshes or rebuilds the affected part of the graph.
+
+7. **If no changes are found, the form is filled as usual**
+   - The frontend shows that there are no relevant changes.
+   - The reviewed extraction results are used to populate the form output.
+
+8. **A separate canary monitors top-level site structure**
+   - Regular checks watch for major ACRA website structure changes.
+   - If structural drift is detected, maintenance rebuilds the broader graph baseline.
+
+9. **Autofill remains simulated in the demo**
+   - The frontend can show a form-filling step driven by reviewed backend output.
+   - No real portal submission is performed in this phase.
