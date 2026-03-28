@@ -15,7 +15,7 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Regulator - TinyFish Compliance",
+  title: "Sigma Tech - TinyFish Compliance",
   description: "Self-healing regulatory knowledge graph",
 };
 

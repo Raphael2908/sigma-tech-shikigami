@@ -218,7 +218,7 @@ async def run_compliance(form_path: str) -> dict:
     logger.info("PDF uploaded to GitHub: %s", pdf_url)
 
     autofill_result = await run_autofill(
-        "http://localhost:8080/form.html", pipeline_output, pdf_url,
+        "https://mock-website-delta.vercel.app/", pipeline_output, pdf_url,
     )
     pipeline_output["autofill"] = autofill_result
 
