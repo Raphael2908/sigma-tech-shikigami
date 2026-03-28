@@ -3,8 +3,8 @@ TINYFISH/
 ├── db/
 │   └── schema.sql
 ├── graph/
-│   ├── __init__.py
-│   ├── store.py          # SQLite read/write
+│   ├── __init__.py       # Re-exports Node + all store functions
+│   ├── store.py          # Async SQLite read/write (aiosqlite)
 │   └── models.py         # Node dataclass
 ├── layers/
 │   ├── __init__.py
@@ -14,11 +14,18 @@ TINYFISH/
 │   ├── layer3_diff.py    # OpenAI semantic diff
 │   └── layer4_form.py    # Form filling + confidence scoring
 ├── clients/
-│   ├── tinyfish.py       # TinyFish API wrapper
-│   └── openai_client.py  # OpenAI wrapper
+│   ├── __init__.py       # Re-exports TinyFishClient
+│   ├── tinyfish.py       # TinyFish API wrapper (httpx async)
+│   └── openai_client.py  # OpenAI wrapper (chat_json)
+├── tests/
+│   ├── test_db.py        # Phase 1 tests
+│   ├── test_tinyfish.py  # Phase 2 tests
+│   └── test_seed.py      # Phase 3 tests
 ├── run.py                # Main orchestration entry point
-├── config.py             # API keys, constants
-└── sample_form.json      # Hardcoded test form for MVP
+├── config.py             # API keys, constants (dotenv)
+├── sample_form.json      # Hardcoded test form for MVP
+├── .env                  # API keys (not committed)
+└── .gitignore
 
 Phase 1 — Database & Models
 Goal: SQLite schema up and readable/writable. No external calls yet.
@@ -55,14 +62,15 @@ CREATE TABLE graph_meta (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-store.py functions to implement:
+store.py functions (all async, all accept optional db_path parameter):
 
-upsert_node(node: Node) -> None
-get_node(url: str) -> Node | None
-get_nodes_by_form_fields(fields: list[str]) -> list[Node]
-save_version(node_id: int, hash: str, json: str) -> None
-get_meta(key: str) -> str | None
-set_meta(key: str, value: str) -> None
+init_db(db_path?) -> None                                    # Creates tables from schema.sql
+upsert_node(node: Node, db_path?) -> None                    # INSERT ON CONFLICT(url) DO UPDATE (preserves id)
+get_node(url: str, db_path?) -> Node | None
+get_nodes_by_form_fields(fields: list[str], db_path?) -> list[Node]  # Python-side JSON filtering
+save_version(node_id: int, hash: str, json_str: str, db_path?) -> None
+get_meta(key: str, db_path?) -> str | None
+set_meta(key: str, value: str, db_path?) -> None
 
 Test: Write a quick test_db.py that inserts a dummy node, reads it back, and saves a version.
 
@@ -72,22 +80,25 @@ Tell Claude Code:
 
 "Build a TinyFish client in clients/tinyfish.py. It needs two methods: run_single (SSE, awaits completion) and run_batch (submits N async tasks, polls until all complete). Use httpx for async HTTP."
 
-Interface to implement:
+Interface (implemented):
 pythonclass TinyFishClient:
     async def run_single(
-        self, url: str, goal: str, browser_profile: str = "default"
-    ) -> dict  # returns parsed result JSON
+        self, url: str, goal: str, browser_profile: str = "stealth"
+    ) -> dict  # returns parsed result JSON via SSE
 
     async def run_batch(
         self, tasks: list[dict]  # each: {url, goal, browser_profile}
-    ) -> list[dict]  # results in same order as tasks
-Key details for Claude Code:
+    ) -> list[dict]  # results in same order as tasks, via /run-batch + polling
+Key details (CORRECTED from original spec — verified against OpenAPI docs):
 
-SSE endpoint: POST https://agent.tinyfish.ai/v1/automation/run-sse
-Async endpoint: POST https://agent.tinyfish.ai/v1/automation/run-async
-Poll for completion on async — check status until all run_ids return COMPLETE or FAILED
+Auth header: X-API-Key (NOT Authorization: Bearer)
+browser_profile: "lite" | "stealth" (NOT "default")
+SSE endpoint: POST /v1/automation/run-sse — used by run_single
+Batch endpoint: POST /v1/automation/run-batch — used by run_batch (submits up to 100 runs)
+Poll endpoint: GET /v1/runs/{id} — status: PENDING|RUNNING|COMPLETED|FAILED|CANCELLED
+Sync endpoint: POST /v1/automation/run — available but not used (run-sse preferred for progress)
 On FAILED: return {"error": "failed", "url": url} — don't raise, let layer 2 handle it
-Auth header: Authorization: Bearer {TINYFISH_API_KEY}
+Full API reference: .claude/rules/tinyfish_api.md
 
 Test: Run a single TinyFish call against a real MAS page before proceeding.
 
@@ -141,6 +152,9 @@ Return format:
   ]
 }
 After OpenAI responds: write each node to SQLite with relevant_form_fields = [field_id].
+Idempotency: Uses graph_meta key "seeded:{form_id}" — skips if already seeded.
+Seed node written at depth_from_seed=0, field nodes at depth_from_seed=1 with parent_url=seed_url.
+OpenAI client: clients/openai_client.py exposes chat_json(system_prompt, user_content) -> dict (reused by layer3_diff).
 Test: Run seeding on sample_form.json, confirm nodes appear in DB with correct goals.
 
 Phase 4 — Layer 1: Canary Check
@@ -273,10 +287,11 @@ Tell Claude Code:
 
 This is additive — add it after everything else works.
 
-Environment Setup
-Tell Claude Code to create this at the start:
+Environment Setup (implemented):
 python# config.py
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 TINYFISH_API_KEY = os.environ["TINYFISH_API_KEY"]
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
@@ -287,8 +302,19 @@ MAS_SEED_URL = "https://www.mas.gov.sg/regulation"
 
 **Dependencies** (`requirements.txt`):
 ```
+aiosqlite
+python-dotenv
 httpx
 openai
-aiosqlite
-asyncio
-python-dotenv
+```
+Note: asyncio is stdlib, not a pip package — removed from requirements.
+
+**Architectural Decisions Log:**
+- All store.py functions are async (aiosqlite) with optional db_path param for testability
+- upsert_node uses ON CONFLICT(url) DO UPDATE to preserve row IDs
+- get_nodes_by_form_fields uses Python-side JSON filtering (not json_each) for SQLite compatibility
+- schema.sql uses IF NOT EXISTS for idempotent init_db()
+- TinyFish auth is X-API-Key header, browser_profile is "lite"|"stealth"
+- run_batch uses /run-batch + GET /runs/{id} polling (5s interval, 300s timeout)
+- OpenAI chat_json() strips markdown fences, uses temperature=0, lazy singleton client
+- Tests use separate test_regflow.db with cleanup in finally block

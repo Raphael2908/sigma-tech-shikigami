@@ -1,3 +1,4 @@
 aiosqlite
 python-dotenv
 httpx
+openai
