@@ -2,3 +2,5 @@ aiosqlite
 python-dotenv
 httpx
 openai
+pypdf
+reportlab
