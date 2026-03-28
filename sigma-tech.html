@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sigma Tech — Corporate Intelligence for Singapore</title>
+
+    <!-- Fonts: Cormorant Garamond (display) + Plus Jakarta Sans (body) + JetBrains Mono (data) -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Icons: Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* ===========================================
+           CSS CUSTOM PROPERTIES — ZEN FOREST THEME
+           =========================================== */
+        :root {
+            /* Background */
+            --bg-primary: #F7F5F0;
+            --bg-secondary: #EFECE5;
+            --bg-card: #FFFFFF;
+            --bg-surface: #F0EDE6;
+            --bg-hover: #E8E4DC;
+
+            /* Text */
+            --text-primary: #1A1A1A;
+            --text-secondary: #4A4A4A;
+            --text-muted: #8A8A8A;
+            --text-dim: #B0B0B0;
+
+            /* Accent — forest green */
+            --accent: #2A6B4A;
+            --accent-soft: rgba(42, 107, 74, 0.08);
+            --accent-glow: rgba(42, 107, 74, 0.25);
+            --accent-deep: #1E5438;
+
+            --warm: #2A6B4A;
+            --warm-soft: rgba(42, 107, 74, 0.07);
+            --green: #2A6B4A;
+            --green-soft: rgba(42, 107, 74, 0.08);
+
+            /* Salmon-orange */
+            --salmon: #E07A5F;
+            --salmon-soft: rgba(224, 122, 95, 0.08);
+
+            /* GitHub purple */
+            --github: #8957E5;
+            --github-soft: rgba(137, 87, 229, 0.08);
+
+            /* Border */
+            --border: rgba(0, 0, 0, 0.06);
+            --border-accent: rgba(42, 107, 74, 0.2);
+
+            /* Typography */
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+
+            --title-size: clamp(2rem, 6vw, 4.45rem);
+            --h2-size: clamp(1.5rem, 4vw, 2.75rem);
+            --h3-size: clamp(1.05rem, 2.5vw, 1.7rem);
+            --subtitle-size: clamp(0.9rem, 1.9vw, 1.3rem);
+            --body-size: clamp(0.75rem, 1.4vw, 1.05rem);
+            --small-size: clamp(0.65rem, 1vw, 0.85rem);
+            --stat-size: clamp(1.8rem, 5vw, 3.5rem);
+
+            /* Spacing */
+            --slide-padding: clamp(1.5rem, 5vw, 5rem);
+            --content-gap: clamp(0.75rem, 2vw, 2rem);
+            --element-gap: clamp(0.4rem, 1vw, 1rem);
+
+            /* Animation */
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+            --duration-normal: 0.7s;
+            --duration-slow: 1.2s;
+        }
+
+        /* RESET & BASE */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body { height: 100%; overflow-x: hidden; }
+        html { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        ::selection { background: var(--accent); color: #fff; }
+
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .slide-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-height: 100%;
+            overflow: hidden;
+            padding: var(--slide-padding);
+        }
+
+        .card, .container, .content-box {
+            max-width: min(90vw, 1100px);
+            max-height: min(80vh, 700px);
+        }
+
+        .feature-list, .bullet-list { gap: clamp(0.4rem, 1vh, 1rem); }
+        .feature-list li, .bullet-list li { font-size: var(--body-size); line-height: 1.4; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+            gap: clamp(0.5rem, 1.5vw, 1rem);
+        }
+
+        img, .image-container {
+            max-width: 100%;
+            max-height: min(50vh, 400px);
+            object-fit: contain;
+        }
+
+        /* RESPONSIVE BREAKPOINTS */
+        @media (max-height: 700px) {
+            :root {
+                --slide-padding: clamp(0.75rem, 3vw, 2rem);
+                --content-gap: clamp(0.4rem, 1.5vw, 1rem);
+                --title-size: clamp(1.5rem, 4.5vw, 2.5rem);
+                --h2-size: clamp(1.2rem, 3vw, 2rem);
+                --stat-size: clamp(1.5rem, 4vw, 2.5rem);
+            }
+        }
+        @media (max-height: 600px) {
+            :root {
+                --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
+                --content-gap: clamp(0.3rem, 1vw, 0.75rem);
+                --title-size: clamp(1.2rem, 4vw, 2rem);
+                --body-size: clamp(0.7rem, 1.2vw, 0.95rem);
+            }
+            .nav-dots, .keyboard-hint, .decorative { display: none; }
+        }
+        @media (max-height: 500px) {
+            :root {
+                --slide-padding: clamp(0.4rem, 2vw, 1rem);
+                --title-size: clamp(1rem, 3.5vw, 1.5rem);
+                --h2-size: clamp(0.9rem, 2.5vw, 1.25rem);
+                --body-size: clamp(0.65rem, 1vw, 0.85rem);
+            }
+        }
+        @media (max-width: 600px) {
+            :root { --title-size: clamp(1.5rem, 8vw, 2.5rem); }
+            .grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+            .team-grid { grid-template-columns: 1fr !important; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.2s !important;
+            }
+            html { scroll-behavior: auto; }
+        }
+
+        /* ANIMATIONS */
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity var(--duration-normal) var(--ease-out-expo),
+                        transform var(--duration-normal) var(--ease-out-expo);
+        }
+        .slide.visible .reveal { opacity: 1; transform: translateY(0); }
+        .reveal:nth-child(1) { transition-delay: 0.1s; }
+        .reveal:nth-child(2) { transition-delay: 0.2s; }
+        .reveal:nth-child(3) { transition-delay: 0.35s; }
+        .reveal:nth-child(4) { transition-delay: 0.5s; }
+        .reveal:nth-child(5) { transition-delay: 0.65s; }
+        .reveal:nth-child(6) { transition-delay: 0.8s; }
+
+        .reveal-scale {
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity var(--duration-slow) var(--ease-out-expo),
+                        transform var(--duration-slow) var(--ease-out-expo);
+        }
+        .slide.visible .reveal-scale { opacity: 1; transform: scale(1); }
+
+        /* PROGRESS BAR */
+        .progress-bar {
+            position: fixed; top: 0; left: 0; height: 2px;
+            background: var(--accent); z-index: 1000;
+            transition: width 0.3s var(--ease-out-expo);
+        }
+
+        /* NAV DOTS */
+        .nav-dots {
+            position: fixed;
+            right: clamp(0.75rem, 2vw, 1.5rem);
+            top: 50%; transform: translateY(-50%);
+            display: flex; flex-direction: column;
+            gap: clamp(6px, 0.8vh, 10px); z-index: 100;
+        }
+        .nav-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--border); cursor: pointer;
+            transition: all 0.3s var(--ease-out-expo); border: none; padding: 0;
+        }
+        .nav-dot:hover { background: var(--text-muted); transform: scale(1.4); }
+        .nav-dot.active { background: var(--accent); transform: scale(1.3); }
+
+        /* SLIDE BACKGROUNDS */
+        .slide::before {
+            content: ''; position: absolute; inset: 0;
+            pointer-events: none; z-index: 0;
+        }
+        .slide > * { position: relative; z-index: 1; }
+
+        .slide-hero { background: url('zen_style.png') center/cover no-repeat; }
+        .slide-hero::before {
+            background:
+                linear-gradient(180deg, rgba(12,26,18,0.5) 0%, rgba(12,26,18,0.35) 30%, rgba(12,26,18,0.55) 70%, rgba(12,26,18,0.88) 100%),
+                linear-gradient(90deg, rgba(12,26,18,0.72) 0%, rgba(12,26,18,0.2) 50%, rgba(12,26,18,0.1) 100%);
+        }
+        .slide-hero .eyebrow { color: rgba(255,255,255,0.5); }
+        .slide-hero .title-brand { color: #F7F5F0; }
+        .slide-hero .title-brand span { color: #2A6B4A; opacity: 0.6; }
+        .slide-hero .title-tagline { color: rgba(247,245,240,0.75); }
+        .slide-hero .divider { background: rgba(255,255,255,0.2); }
+        .slide-hero .title-meta { color: rgba(255,255,255,0.3); }
+        .slide-hero .team-card { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
+        .slide-hero .team-name { color: #F7F5F0; }
+
+        .slide-cta { background: url('zen_style.png') center/cover no-repeat; }
+        .slide-cta::before {
+            background:
+                linear-gradient(180deg, rgba(12,26,18,0.82) 0%, rgba(12,26,18,0.75) 50%, rgba(12,26,18,0.88) 100%);
+        }
+        .slide-cta .eyebrow { color: rgba(255,255,255,0.5); }
+        .slide-cta .display-title { color: #F7F5F0; }
+        .slide-cta .subtitle { color: rgba(247,245,240,0.7); }
+        .slide-cta .cta-meta { color: rgba(255,255,255,0.3); }
+
+        .slide-cream { background: var(--bg-primary); }
+        .slide-cream::before { background: none; }
+
+        .slide-warm { background: var(--bg-secondary); }
+        .slide-warm::before { background: none; }
+
+        /* TYPOGRAPHY */
+        .display-title {
+            font-family: var(--font-display);
+            font-size: var(--title-size); font-weight: 600;
+            line-height: 1.1; color: var(--text-primary); letter-spacing: -0.01em;
+        }
+        .display-title em { font-style: italic; color: var(--accent); }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: var(--h2-size); font-weight: 600;
+            line-height: 1.15; color: var(--text-primary); letter-spacing: -0.01em;
+        }
+
+        .eyebrow {
+            font-family: var(--font-mono);
+            font-size: var(--small-size); letter-spacing: 0.14em;
+            text-transform: uppercase; color: var(--accent);
+            margin-bottom: clamp(0.5rem, 1.5vw, 1.25rem);
+        }
+
+        .subtitle {
+            font-size: var(--subtitle-size); color: var(--text-secondary);
+            line-height: 1.65; max-width: 560px; font-weight: 400;
+        }
+
+        .body-text { font-size: var(--body-size); color: var(--text-secondary); line-height: 1.6; }
+
+        .stat-number {
+            font-family: var(--font-body); font-size: var(--stat-size);
+            font-weight: 600; line-height: 1; color: var(--accent);
+        }
+        .stat-number.warn { color: var(--warm); }
+        .stat-number.green { color: var(--green); }
+        .stat-number.negative { color: var(--salmon); }
+
+        .mono { font-family: var(--font-mono); }
+
+        /* COMPONENTS */
+        .stat-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: clamp(8px, 1vw, 14px);
+            padding: clamp(0.75rem, 2vw, 1.75rem); text-align: center;
+            transition: border-color 0.3s;
+        }
+        .stat-card:hover { border-color: var(--border-accent); }
+        .stat-label {
+            font-size: var(--small-size); color: var(--text-muted);
+            margin-top: clamp(0.25rem, 0.5vw, 0.5rem); line-height: 1.4;
+        }
+
+        .content-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: clamp(8px, 1vw, 14px);
+            padding: clamp(1rem, 2.5vw, 2rem); transition: all 0.35s;
+        }
+        .content-card:hover { border-color: var(--border-accent); transform: translateY(-2px); }
+        .content-card h3 {
+            font-family: var(--font-display); font-size: var(--h3-size);
+            font-weight: 500; color: var(--text-primary);
+            margin-bottom: clamp(0.25rem, 0.75vw, 0.5rem);
+        }
+        .content-card p { font-size: var(--body-size); color: var(--text-secondary); line-height: 1.55; }
+
+        .badge {
+            display: inline-block; font-family: var(--font-mono);
+            font-size: clamp(0.55rem, 0.8vw, 0.7rem); letter-spacing: 0.08em;
+            padding: clamp(0.15rem, 0.3vw, 0.25rem) clamp(0.4rem, 0.8vw, 0.65rem);
+            border-radius: 4px; font-weight: 500;
+        }
+        .badge-warn { background: var(--warm-soft); color: var(--warm); }
+        .badge-green { background: var(--green-soft); color: var(--green); }
+        .badge-accent { background: var(--accent-soft); color: var(--accent); }
+
+        .lucide-icon {
+            width: clamp(18px, 2vw, 24px); height: clamp(18px, 2vw, 24px);
+            stroke-width: 1.5; color: var(--accent); flex-shrink: 0;
+        }
+        .lucide-icon.muted { color: var(--text-muted); }
+        .lucide-icon.salmon { color: var(--salmon); }
+        .stat-card .lucide-icon {
+            width: clamp(20px, 2.5vw, 28px); height: clamp(20px, 2.5vw, 28px);
+            margin-bottom: clamp(0.1rem, 0.2vw, 0.15rem);
+        }
+        .content-card .lucide-icon {
+            width: clamp(20px, 2.5vw, 28px); height: clamp(20px, 2.5vw, 28px);
+            margin-bottom: clamp(0.15rem, 0.3vw, 0.25rem);
+        }
+
+        .jp-accent {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(0.6rem, 0.9vw, 0.75rem); color: var(--text-dim);
+            opacity: 0.35; letter-spacing: 0.3em; font-weight: 500;
+            user-select: none; pointer-events: none;
+        }
+        .jp-accent.center { text-align: center; }
+        .jp-large { font-size: clamp(0.75rem, 1.2vw, 1rem); letter-spacing: 0.5em; }
+
+        .divider {
+            width: clamp(30px, 4vw, 50px); height: 2px;
+            background: var(--accent); opacity: 0.3;
+            margin: clamp(0.5rem, 1.5vw, 1.25rem) 0;
+        }
+
+        .accent-border {
+            border-left: 3px solid var(--accent);
+            padding-left: clamp(0.75rem, 1.5vw, 1.25rem);
+        }
+
+        /* SLIDE 1: RACHEL'S STORY */
+        .story-narrative {
+            max-width: min(90vw, 680px);
+            display: flex; flex-direction: column;
+            gap: clamp(0.6rem, 1.5vw, 1.25rem);
+        }
+        .story-narrative .story-quote {
+            font-family: var(--font-display); font-size: var(--h3-size);
+            font-style: italic; font-weight: 600; color: var(--accent);
+            line-height: 1.5; border-left: 3px solid var(--accent);
+            padding-left: clamp(0.75rem, 1.5vw, 1.25rem);
+        }
+        .story-narrative .story-detail {
+            font-size: var(--body-size); color: var(--text-secondary); line-height: 1.65;
+        }
+        .story-narrative .story-detail strong { color: var(--text-primary); font-weight: 600; }
+        .story-narrative .story-punchline {
+            font-family: var(--font-display); font-size: var(--subtitle-size);
+            font-weight: 600; color: var(--text-primary); line-height: 1.45;
+        }
+
+        .story-layout {
+            display: flex; align-items: center;
+            gap: clamp(1.5rem, 4vw, 3rem); width: 100%; max-width: min(95vw, 1200px);
+        }
+        .story-text-col { flex: 1 1 45%; min-width: 0; }
+        .story-photo-col { flex: 1 1 50%; display: flex; flex-direction: column; min-width: 0; }
+        .story-photos-wrap { position: relative; min-height: clamp(220px, 40vh, 400px); }
+        .story-photo {
+            position: absolute; border-radius: clamp(8px, 1vw, 14px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1), 0 1px 4px rgba(0,0,0,0.06);
+            object-fit: cover;
+            transition: transform 0.5s var(--ease-out-expo), box-shadow 0.5s var(--ease-out-expo);
+        }
+        .story-photo:hover {
+            transform: scale(1.03) !important;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.08);
+            z-index: 10;
+        }
+        .story-photo.rachel {
+            width: clamp(180px, 26vw, 300px); height: auto; aspect-ratio: 3/4;
+            top: 5%; left: 15%; transform: rotate(-2deg); z-index: 3;
+        }
+        .story-photo.pastries {
+            width: clamp(110px, 16vw, 190px); height: auto; aspect-ratio: 9/16;
+            bottom: 0; left: 0; transform: rotate(-5deg); z-index: 2;
+        }
+        .story-photo.ot {
+            width: clamp(110px, 16vw, 190px); height: auto; aspect-ratio: 9/16;
+            top: -5%; right: 0; transform: rotate(4deg); z-index: 2;
+        }
+        .rachel-bio {
+            position: relative; z-index: 10; display: flex; flex-direction: column; gap: 2px;
+            background: var(--bg-card);
+            padding: clamp(0.5rem, 1vw, 0.75rem) clamp(0.75rem, 1.2vw, 1rem);
+            border-radius: clamp(6px, 0.8vw, 10px); border: 1px solid var(--border);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            margin-top: clamp(0.5rem, 1vw, 0.75rem);
+        }
+        .rachel-bio-name { font-family: var(--font-display); font-size: clamp(0.9rem, 1.6vw, 1.2rem); font-weight: 600; color: var(--text-primary); }
+        .rachel-bio-age { font-family: var(--font-mono); font-size: clamp(0.6rem, 1vw, 0.8rem); font-weight: 600; color: var(--accent); letter-spacing: 0.05em; }
+        .rachel-bio-role { font-family: var(--font-body); font-size: clamp(0.65rem, 1.1vw, 0.85rem); font-weight: 600; color: var(--text-secondary); }
+        .rachel-bio-firm { font-family: var(--font-body); font-size: clamp(0.55rem, 0.9vw, 0.75rem); color: var(--text-muted); }
+        @media (max-width: 900px) {
+            .story-layout { flex-direction: column; }
+            .story-photo-col { min-height: clamp(200px, 35vh, 300px); width: 100%; max-width: 400px; margin: 0 auto; }
+        }
+
+        /* SLIDE 2: HERO */
+        .title-content {
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: flex-start; gap: clamp(0.5rem, 1.5vw, 1.5rem);
+        }
+        .title-brand {
+            font-family: var(--font-display); font-size: clamp(3rem, 8vw, 7rem);
+            font-weight: 600; color: var(--text-primary); letter-spacing: -0.02em; line-height: 1;
+        }
+        .title-brand span { color: var(--accent); opacity: 0.4; }
+        .title-tagline {
+            font-size: var(--subtitle-size); color: var(--text-secondary);
+            max-width: 480px; line-height: 1.65;
+        }
+        .title-meta {
+            font-family: var(--font-mono); font-size: var(--small-size);
+            color: var(--text-dim); margin-top: clamp(0.5rem, 2vw, 2rem);
+        }
+
+        .team-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: clamp(0.5rem, 1.5vw, 1.25rem);
+            margin-top: clamp(0.25rem, 0.5vw, 0.5rem);
+        }
+        .team-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: clamp(8px, 1vw, 14px);
+            padding: clamp(0.5rem, 1.5vw, 1rem); text-align: center;
+            display: flex; flex-direction: column; align-items: center;
+            gap: clamp(0.15rem, 0.3vw, 0.25rem);
+        }
+        .team-name {
+            font-family: var(--font-display); font-size: var(--h3-size);
+            font-weight: 500; color: var(--text-primary);
+        }
+
+        /* SLIDE 3: STATS & COMPARE */
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: clamp(0.5rem, 1.5vw, 1.25rem); margin-top: var(--content-gap);
+        }
+        .compare-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: clamp(0.75rem, 2vw, 1.5rem); margin-top: var(--content-gap);
+        }
+        .compare-col {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: clamp(8px, 1vw, 14px); padding: clamp(1rem, 2.5vw, 2rem);
+        }
+        .compare-tag {
+            display: inline-block; font-family: var(--font-mono);
+            font-size: clamp(0.5rem, 0.7vw, 0.6rem); letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: clamp(0.15rem, 0.3vw, 0.25rem) clamp(0.4rem, 0.8vw, 0.65rem);
+            border-radius: 20px; margin-bottom: clamp(0.5rem, 1vw, 0.85rem);
+        }
+        .compare-tag.today { background: rgba(0,0,0,0.05); color: var(--text-muted); }
+        .compare-tag.sigma-tech { background: var(--green-soft); color: var(--green); }
+        .compare-list {
+            list-style: none; display: flex; flex-direction: column;
+            gap: clamp(0.5rem, 1.2vw, 1rem);
+        }
+        .compare-list li {
+            display: flex; align-items: flex-start;
+            gap: clamp(0.4rem, 0.8vw, 0.65rem);
+            font-size: var(--body-size); color: var(--text-muted); line-height: 1.45;
+        }
+        .compare-list li strong { font-family: var(--font-body); font-size: var(--body-size); font-weight: 600; color: var(--text-primary); }
+        .compare-icon {
+            flex-shrink: 0;
+            width: clamp(16px, 1.4vw, 20px); height: clamp(16px, 1.4vw, 20px);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: clamp(0.5rem, 0.7vw, 0.6rem); font-weight: 700; margin-top: 2px;
+        }
+        .compare-icon.x { background: rgba(0,0,0,0.05); color: var(--text-muted); }
+        .compare-icon.check { background: var(--green-soft); color: var(--green); }
+
+        /* ARCHITECTURE & FLOW SVG SLIDES */
+        .slide-arch .slide-content, .slide-flow .slide-content {
+            padding: clamp(0.5rem, 1.5vw, 1.25rem) clamp(1rem, 3vw, 3rem);
+            gap: clamp(0.15rem, 0.4vw, 0.35rem);
+        }
+        .slide-arch .eyebrow, .slide-flow .eyebrow { margin-bottom: 0; }
+        .slide-arch .section-title, .slide-flow .section-title { margin-bottom: 0; font-size: clamp(1.2rem, 3vw, 2.2rem); }
+        .arch-svg-wrap, .flow-svg-wrap {
+            width: min(96vw, 1200px); max-height: none;
+            margin: clamp(0.25rem, 0.5vw, 0.5rem) auto 0;
+            flex: 1 1 auto; min-height: 0;
+        }
+        .arch-svg-wrap svg, .flow-svg-wrap svg {
+            width: 100%; height: 100%; max-height: none;
+        }
+
+        /* DEMO PLACEHOLDER */
+        .demo-frame {
+            width: min(90vw, 900px); aspect-ratio: 16 / 9;
+            max-height: min(55vh, 500px); background: #000;
+            border: 1px solid var(--border); border-radius: clamp(10px, 1.5vw, 20px);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: clamp(0.5rem, 1.5vw, 1.25rem); margin: 0 auto; margin-top: var(--content-gap);
+            position: relative; overflow: hidden;
+        }
+        .demo-frame iframe {
+            position: absolute; inset: 0; width: 100%; height: 100%; border: none; border-radius: inherit;
+        }
+        .demo-frame::before {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(ellipse at 50% 50%, rgba(42,107,74,0.03) 0%, transparent 60%);
+        }
+        .play-btn {
+            width: clamp(48px, 6vw, 72px); height: clamp(48px, 6vw, 72px);
+            border-radius: 50%; background: var(--accent);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 24px var(--accent-glow); transition: all 0.3s;
+            cursor: pointer; position: relative; z-index: 1;
+        }
+        .play-btn:hover { transform: scale(1.08); box-shadow: 0 8px 40px var(--accent-glow); }
+        .play-btn svg { width: clamp(18px, 2.5vw, 28px); height: clamp(18px, 2.5vw, 28px); fill: #fff; margin-left: 3px; }
+        .demo-label {
+            font-family: var(--font-mono); font-size: var(--small-size);
+            color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase;
+            position: relative; z-index: 1;
+        }
+
+        /* MARKET GRID */
+        .market-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: clamp(0.5rem, 1.5vw, 1.25rem); margin-top: var(--content-gap);
+        }
+
+        /* CTA */
+        .cta-content {
+            display: flex; flex-direction: column; align-items: center;
+            text-align: center; gap: clamp(0.5rem, 1.5vw, 1.25rem);
+        }
+        .cta-meta { font-family: var(--font-mono); font-size: var(--small-size); color: var(--text-dim); }
+
+        .source-link {
+            font-family: var(--font-mono); font-size: clamp(0.5rem, 0.7vw, 0.6rem);
+            color: var(--text-dim); text-decoration: none;
+            border-bottom: 1px dotted var(--text-dim);
+            transition: color 0.2s, border-color 0.2s; letter-spacing: 0.02em;
+        }
+        .source-link:hover { color: var(--accent); border-color: var(--accent); }
+
+        /* CREATIVE TRICK SLIDE */
+        .trick-flow {
+            display: flex; align-items: center; justify-content: center;
+            gap: clamp(0.5rem, 1.2vw, 1rem); margin-top: var(--content-gap);
+            flex-wrap: wrap; max-width: min(95vw, 1100px);
+        }
+        .trick-step {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: clamp(8px, 1vw, 14px);
+            padding: clamp(0.75rem, 1.5vw, 1.25rem);
+            text-align: center; flex: 1 1 auto; min-width: 140px; max-width: 200px;
+        }
+        .trick-step.highlight-green { border-color: var(--accent); background: rgba(42,107,74,0.03); }
+        .trick-step.highlight-purple { border-color: var(--github); background: rgba(137,87,229,0.03); }
+        .trick-step.highlight-salmon { border-color: var(--salmon); background: rgba(224,122,95,0.03); }
+        .trick-step-label {
+            font-family: var(--font-mono); font-size: clamp(0.55rem, 0.8vw, 0.7rem);
+            letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;
+            margin-bottom: clamp(0.25rem, 0.5vw, 0.4rem);
+        }
+        .trick-step-label.green { color: var(--accent); }
+        .trick-step-label.purple { color: var(--github); }
+        .trick-step-label.salmon { color: var(--salmon); }
+        .trick-step h3 {
+            font-family: var(--font-display); font-size: clamp(0.9rem, 1.6vw, 1.25rem);
+            font-weight: 600; color: var(--text-primary);
+            margin-bottom: clamp(0.15rem, 0.3vw, 0.25rem);
+        }
+        .trick-step p {
+            font-size: clamp(0.65rem, 1vw, 0.85rem);
+            color: var(--text-secondary); line-height: 1.45;
+        }
+        .trick-arrow {
+            font-size: clamp(1rem, 2vw, 1.5rem); color: var(--text-dim); flex-shrink: 0;
+        }
+        .trick-callout {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: clamp(8px, 1vw, 14px); border-left: 3px solid var(--github);
+            padding: clamp(0.75rem, 1.5vw, 1.25rem);
+            max-width: min(90vw, 700px); margin: clamp(0.5rem, 1vw, 0.75rem) auto 0;
+        }
+        .trick-callout p {
+            font-size: var(--body-size); color: var(--text-secondary); line-height: 1.55;
+        }
+        .trick-callout strong { color: var(--text-primary); }
+        .trick-callout code {
+            font-family: var(--font-mono); font-size: clamp(0.6rem, 0.9vw, 0.78rem);
+            background: var(--bg-surface); padding: 0.1em 0.35em; border-radius: 4px;
+            color: var(--github);
+        }
+
+        /* RESPONSIVE OVERRIDES */
+        @media (max-width: 900px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .compare-grid { grid-template-columns: 1fr; }
+            .market-grid { grid-template-columns: 1fr; }
+            .team-grid { grid-template-columns: 1fr; }
+            .arch-svg-wrap, .flow-svg-wrap { width: 95vw; }
+            .trick-flow { flex-direction: column; align-items: stretch; }
+            .trick-step { max-width: none; }
+            .trick-arrow { transform: rotate(90deg); align-self: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Progress bar -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- Navigation dots -->
+    <nav class="nav-dots" id="navDots" aria-label="Slide navigation"></nav>
+
+    <!-- ==========================================
+         SLIDE 1: RACHEL'S STORY
+         ========================================== -->
+    <section class="slide slide-cream">
+        <div class="slide-content">
+            <div class="story-layout">
+                <div class="story-text-col">
+                    <h1 class="title-tagline reveal">Picture this</h1>
+                    <p class="eyebrow reveal">9:07 am · Tuesday · Tanjong Pagar</p>
+                    <div class="story-narrative">
+                        <p class="story-detail reveal"><strong>Corporate Service Provider managing 50 client companies</strong></p>
+                        <p class="story-detail reveal"><strong>20 browser tabs</strong> — ACRA BizFile+, Companies Act, law firm newsletters, her personal tracking spreadsheet</p>
+                        <p class="story-detail reveal"><strong>Deeply nested government sites</strong> — requirements buried across ACRA, MAS, IRAS portals and sub-pages</p>
+                        <p class="story-detail reveal"><strong>Fines and penalties</strong> — personal liability for lack of due diligence under CSP Act 2024</p>
+                        <p class="story-detail reveal"><strong>Too many dependencies</strong> — cross-agency rules, frequent changes, no single source of truth</p>
+                        <p class="story-punchline reveal" style="color: var(--accent); font-size: var(--h2-size);">40 min research, for a 20-min form or advice session.</p>
+                    </div>
+                </div>
+                <div class="story-photo-col reveal-scale">
+                    <div class="story-photos-wrap">
+                        <img src="assets/Rachel-Tan.jpeg" alt="Rachel Tan, corporate service provider" class="story-photo rachel" />
+                        <img src="assets/Pasteries.jpg" alt="Morning pastries at the office" class="story-photo pastries" />
+                        <img src="assets/OT.jpg" alt="Late night overtime" class="story-photo ot" />
+                    </div>
+                    <div class="rachel-bio">
+                        <span class="rachel-bio-name">Rachel Tan Wei Ling</span>
+                        <span class="rachel-bio-age">29–34</span>
+                        <span class="rachel-bio-role">Corporate Service Provider / Qualified Individual</span>
+                        <span class="rachel-bio-firm">Mid-size CSP, 50 client companies</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         SLIDE 2: TEAM & PRODUCT — Hero
+         ========================================== -->
+    <section class="slide slide-hero">
+        <div class="slide-content title-content">
+            <p class="eyebrow reveal">Our solution</p>
+            <h1 class="title-brand reveal">Sigma Tech<span>.</span></h1>
+            <p class="title-tagline reveal">Corporate intelligence for Singapore. We monitor every regulatory change across ACRA, MAS, MOM, IRAS, and ICA — so your team always knows what changed, when, and which filings it affects.</p>
+            <div class="divider reveal"></div>
+            <div class="team-grid reveal" style="max-width: 500px;">
+                <div class="team-card">
+                    <div class="team-name">Raphael</div>
+                </div>
+                <div class="team-card">
+                    <div class="team-name">Darren</div>
+                </div>
+                <div class="team-card">
+                    <div class="team-name">Jerome</div>
+                </div>
+            </div>
+            <p class="title-meta reveal">Built with TinyFish, OpenAI GPT-4o, FastAPI, Next.js and SQLite</p>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         SLIDE 3: PROBLEM & SOLUTION
+         ========================================== -->
+    <section class="slide slide-warm">
+        <div class="slide-content">
+            <p class="eyebrow reveal">The problem & our solution</p>
+            <h2 class="section-title reveal">Rachel's story happens 1,500 times<br>a day across Singapore.</h2>
+            <div class="compare-grid">
+                <div class="compare-col reveal">
+                    <span class="compare-tag today">The hidden cost</span>
+                    <ul class="compare-list">
+                        <li><span class="compare-icon x">&times;</span><strong>Deeply nested portals</strong> — info buried 5–7 clicks deep across 5 agencies</li>
+                        <li><span class="compare-icon x">&times;</span><strong>Cross-agency dependencies</strong> — one MAS change can ripple into ACRA, tax, and EP filings</li>
+                        <li><span class="compare-icon x">&times;</span><strong>100–200+ changes/year</strong> — no single source of truth <a href="https://www.mas.gov.sg/regulation/regulations-and-guidance" target="_blank" rel="noopener" class="source-link">MAS</a></li>
+                        <li><span class="compare-icon x">&times;</span><strong>780 hours/year</strong> — spent navigating government sites <a href="https://www.thomsonreuters.com/en-us/posts/investigation-fraud-and-risk/cost-of-compliance-2023/" target="_blank" rel="noopener" class="source-link">Thomson Reuters</a></li>
+                    </ul>
+                </div>
+                <div class="compare-col reveal">
+                    <span class="compare-tag sigma-tech">With Sigma Tech</span>
+                    <ul class="compare-list">
+                        <li><span class="compare-icon check">&#10003;</span><strong>All 5 agencies</strong> — monitored continuously</li>
+                        <li><span class="compare-icon check">&#10003;</span><strong>Filing-specific alerts</strong> — what changed since your last filing</li>
+                        <li><span class="compare-icon check">&#10003;</span><strong>Auto-extraction</strong> — pulls data from documents, pre-fills forms</li>
+                        <li><span class="compare-icon check">&#10003;</span><strong>1 hour → 20 min</strong> — filing time after Sigma Tech</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         SLIDE 4: WHY THIS PERSISTS — Penalties
+         ========================================== -->
+    <section class="slide slide-cream">
+        <div class="slide-content">
+            <p class="eyebrow reveal">Why this problem persists</p>
+            <h2 class="section-title reveal">The fear of what she doesn't know<br>she doesn't know.</h2>
+            <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="stat-card reveal">
+                    <i data-lucide="alert-triangle" class="lucide-icon salmon"></i>
+                    <div class="stat-number negative">S$27.45M</div>
+                    <div class="stat-label">MAS penalties in a single enforcement action (July 2025) <a href="https://www.mas.gov.sg/regulation/enforcement/enforcement-actions/2025/mas-takes-regulatory-actions-against-9-financial-institutions-for-aml-related-breaches" target="_blank" rel="noopener" class="source-link">MAS</a></div>
+                </div>
+                <div class="stat-card reveal">
+                    <i data-lucide="file-warning" class="lucide-icon salmon"></i>
+                    <div class="stat-number negative">S$25,000</div>
+                    <div class="stat-label">Max ACRA fine for register failures under new rules <a href="https://www.acra.gov.sg/legislation/legislative-reform/corporate-service-providers-bill-and-companies-and-limited-liability-partnerships-(miscellaneous-amendments)-act-2024" target="_blank" rel="noopener" class="source-link">ACRA</a></div>
+                </div>
+                <div class="stat-card reveal">
+                    <i data-lucide="scale" class="lucide-icon"></i>
+                    <div class="stat-number" style="color: var(--text-primary); font-size: clamp(1.4rem, 3.5vw, 2.2rem);">CSP Act 2024</div>
+                    <div class="stat-label">CSPs must renew registration every 2 years with at least one RQI meeting AML training requirements <a href="https://sso.agc.gov.sg/Act/CSPA2024" target="_blank" rel="noopener" class="source-link">CSP Act 2024</a></div>
+                </div>
+            </div>
+            <div class="divider reveal" style="margin: clamp(0.5rem, 1vw, 0.75rem) 0;"></div>
+            <p class="subtitle reveal" style="max-width: 700px;">Enterprise RegTech costs S$100K+/year — built for banks, not CSPs. No mid-market solution exists. The only alternative is hiring more people at S$4,500–5,500/month each. <a href="https://www.globenewswire.com/news-release/2024/10/11/2961864/0/en/Singapore-RegTech-Business-and-Investment-Opportunities-Databook-2024-16-7-CAGR-Forecast-Duing-2024-2029-with-Singapore-s-Regtech-Industry-Set-to-Reach-US-386-48-Million-by-2029.html" target="_blank" rel="noopener" class="source-link">ResearchAndMarkets 2024</a></p>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         SLIDE 5: SYSTEM ARCHITECTURE — loop diagram
+         ========================================== -->
+    <section class="slide slide-warm slide-arch">
+        <div class="slide-content" style="align-items: center; text-align: center;">
+            <p class="eyebrow reveal">Under the hood</p>
+            <h2 class="section-title reveal">OpenAI drives TinyFish. TinyFish feeds OpenAI.</h2>
+            <div class="arch-svg-wrap reveal-scale">
+                <svg viewBox="0 0 1100 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="System architecture showing feedback loop between OpenAI and TinyFish">
+                    <defs>
+                        <marker id="a-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#2A6B4A"/>
+                        </marker>
+                        <marker id="a-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#8957E5"/>
+                        </marker>
+                        <marker id="a-salmon" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#E07A5F"/>
+                        </marker>
+                        <marker id="a-muted" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#8A8A8A"/>
+                        </marker>
+                    </defs>
+
+                    <!-- ===== OPENAI (top center) ===== -->
+                    <rect x="330" y="5" width="270" height="140" rx="16" fill="#FFF" stroke="rgba(0,0,0,0.12)" stroke-width="1.5"/>
+                    <text x="465" y="48" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-size="28" font-weight="600" fill="#1A1A1A">OpenAI GPT-4o</text>
+                    <text x="465" y="74" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="13" fill="#8A8A8A">3 roles in the pipeline:</text>
+                    <text x="465" y="97" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="12" fill="#4A4A4A">1. Generate extraction goals</text>
+                    <text x="465" y="116" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="12" fill="#4A4A4A">2. Semantic diff (material vs cosmetic)</text>
+                    <text x="465" y="135" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="12" fill="#4A4A4A">3. Map fields to PDF AcroForm</text>
+
+                    <!-- ===== USER (left) ===== -->
+                    <rect x="10" y="225" width="130" height="90" rx="16" fill="#FFF" stroke="rgba(0,0,0,0.12)" stroke-width="1.5"/>
+                    <text x="75" y="265" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-size="28" font-weight="600" fill="#1A1A1A">User</text>
+                    <text x="75" y="290" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="13" fill="#8A8A8A">Upload form PDF</text>
+
+                    <!-- Arrow User → FastAPI -->
+                    <line x1="140" y1="270" x2="268" y2="270" stroke="#2A6B4A" stroke-width="2" marker-end="url(#a-green)"/>
+
+                    <!-- ===== FASTAPI (center) ===== -->
+                    <rect x="278" y="210" width="220" height="140" rx="8" fill="rgba(42,107,74,0.05)" stroke="#2A6B4A" stroke-width="2.5"/>
+                    <text x="388" y="262" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-size="28" font-weight="600" fill="#1A1A1A">FastAPI</text>
+                    <text x="388" y="286" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="13" fill="#8A8A8A">Orchestrator</text>
+                    <text x="388" y="308" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="12" fill="#B0B0B0">Hashing, comparison,</text>
+                    <text x="388" y="324" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="12" fill="#B0B0B0">confidence scoring</text>
+
+                    <!-- ===== TINYFISH (right) ===== -->
+                    <rect x="650" y="210" width="240" height="140" rx="16" fill="#FFF" stroke="rgba(0,0,0,0.12)" stroke-width="1.5"/>
+                    <text x="770" y="255" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-size="28" font-weight="600" fill="#1A1A1A">TinyFish</text>
+                    <text x="770" y="280" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="13" fill="#8A8A8A">3 roles in the pipeline:</text>
+                    <text x="770" y="303" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="12" fill="#4A4A4A">1. Canary check (site hash)</text>
+                    <text x="770" y="322" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="12" fill="#4A4A4A">2. Parallel batch extraction (stealth)</text>
+                    <text x="770" y="341" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="12" fill="#4A4A4A">3. Autofill BizFile+ form</text>
+
+                    <!-- ===== SQLITE (below FastAPI) ===== -->
+                    <rect x="308" y="415" width="180" height="95" rx="16" fill="#FFF" stroke="rgba(0,0,0,0.12)" stroke-width="1.5"/>
+                    <text x="398" y="452" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-size="26" font-weight="600" fill="#1A1A1A">SQLite</text>
+                    <text x="398" y="476" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="13" fill="#8A8A8A">Knowledge Graph</text>
+                    <text x="398" y="498" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#B0B0B0">Versioned nodes, hashes, diffs</text>
+
+                    <!-- ===== GITHUB (below TinyFish) ===== -->
+                    <rect x="690" y="415" width="170" height="95" rx="16" fill="#FFF" stroke="rgba(137,87,229,0.3)" stroke-width="1.5"/>
+                    <text x="775" y="452" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-size="26" font-weight="600" fill="#1A1A1A">GitHub</text>
+                    <text x="775" y="474" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="13" fill="#8957E5">PDF Bridge</text>
+                    <text x="775" y="498" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#B0B0B0">TinyFish downloads filled PDF</text>
+
+                    <!-- ===== ARROWS ===== -->
+
+                    <!-- FastAPI → OpenAI (send up, left side) -->
+                    <line x1="410" y1="210" x2="410" y2="150" stroke="#2A6B4A" stroke-width="2" marker-end="url(#a-green)"/>
+                    <text x="310" y="183" font-family="'JetBrains Mono', monospace" font-size="11" fill="#2A6B4A" font-weight="500">form def + raw content</text>
+
+                    <!-- OpenAI → FastAPI (return down, right side) -->
+                    <line x1="480" y1="150" x2="480" y2="210" stroke="#E07A5F" stroke-width="2" marker-end="url(#a-salmon)"/>
+                    <text x="494" y="183" font-family="'JetBrains Mono', monospace" font-size="11" fill="#E07A5F" font-weight="500">goals + diffs + field map</text>
+
+                    <!-- FastAPI → TinyFish (send right, upper) -->
+                    <line x1="498" y1="252" x2="648" y2="252" stroke="#2A6B4A" stroke-width="2" marker-end="url(#a-green)"/>
+                    <text x="573" y="244" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" fill="#2A6B4A" font-weight="500">goals + target URLs</text>
+
+                    <!-- TinyFish → FastAPI (return left, lower) -->
+                    <line x1="648" y1="290" x2="498" y2="290" stroke="#E07A5F" stroke-width="2" marker-end="url(#a-salmon)"/>
+                    <text x="573" y="310" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" fill="#E07A5F" font-weight="500">extracted JSON + hashes</text>
+
+                    <!-- FastAPI → SQLite -->
+                    <line x1="398" y1="350" x2="398" y2="413" stroke="#8A8A8A" stroke-width="1.5" marker-end="url(#a-muted)"/>
+                    <text x="415" y="388" font-family="'JetBrains Mono', monospace" font-size="10" fill="#8A8A8A">store/read</text>
+
+                    <!-- FastAPI → GitHub (dashed diagonal, below TinyFish) -->
+                    <line x1="498" y1="340" x2="688" y2="440" stroke="#8957E5" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#a-purple)"/>
+                    <text x="570" y="408" font-family="'JetBrains Mono', monospace" font-size="11" fill="#8957E5" font-weight="500">upload filled PDF</text>
+
+                    <!-- GitHub → TinyFish (dashed vertical up) -->
+                    <line x1="775" y1="415" x2="775" y2="352" stroke="#8957E5" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#a-purple)"/>
+                    <text x="793" y="388" font-family="'JetBrains Mono', monospace" font-size="10" fill="#8957E5" font-weight="500">raw URL</text>
+
+                    <!-- THE LOOP label -->
+                    <rect x="880" y="20" width="210" height="55" rx="10" fill="rgba(42,107,74,0.05)" stroke="rgba(42,107,74,0.2)" stroke-width="1"/>
+                    <text x="985" y="43" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="13" font-weight="600" fill="#2A6B4A">The Loop</text>
+                    <text x="985" y="63" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">OpenAI thinks. TinyFish acts.</text>
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         SLIDE 6: THE CREATIVE TRICK — GitHub PDF Bridge
+         ========================================== -->
+    <section class="slide slide-cream">
+        <div class="slide-content" style="align-items: center; text-align: center;">
+            <p class="eyebrow reveal">The creative problem</p>
+            <h2 class="section-title reveal">TinyFish can't access your filesystem.<br>So we gave it a URL instead.</h2>
+            <p class="subtitle reveal" style="text-align: center; max-width: 640px; margin: 0 auto;">TinyFish runs in its own isolated browser session. It can't read local files. But it needs to upload a filled PDF to BizFile+. Our solution: use GitHub as the bridge.</p>
+            <div class="trick-flow reveal">
+                <div class="trick-step highlight-green">
+                    <div class="trick-step-label green">OpenAI + pypdf</div>
+                    <h3>Fill PDF locally</h3>
+                    <p>GPT-4o maps extracted fields to 45 AcroForm names. pypdf writes the PDF.</p>
+                </div>
+                <div class="trick-arrow">&rarr;</div>
+                <div class="trick-step highlight-purple">
+                    <div class="trick-step-label purple">GitHub API</div>
+                    <h3>Upload to GitHub</h3>
+                    <p>Filled PDF pushed to repo via Contents API. Returns a raw URL.</p>
+                </div>
+                <div class="trick-arrow">&rarr;</div>
+                <div class="trick-step highlight-purple">
+                    <div class="trick-step-label purple">raw.githubusercontent</div>
+                    <h3>Public URL</h3>
+                    <p>PDF now accessible at a URL any browser can reach.</p>
+                </div>
+                <div class="trick-arrow">&rarr;</div>
+                <div class="trick-step highlight-salmon">
+                    <div class="trick-step-label salmon">TinyFish Agent</div>
+                    <h3>Download + upload</h3>
+                    <p>Agent downloads PDF from GitHub, uploads it to BizFile+ form.</p>
+                </div>
+            </div>
+            <div class="trick-callout reveal">
+                <p><strong>Why this matters:</strong> TinyFish's goal includes the URL: <code>"download the PDF from {pdf_url} then upload it using the file input"</code>. The agent navigates the form, fills fields, attaches the PDF, and stops at the review page. GitHub becomes the filesystem bridge between our backend and TinyFish's isolated browser.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         SLIDE 7: TECHNICAL FLOW — 7-layer pipeline
+         ========================================== -->
+    <section class="slide slide-warm slide-flow">
+        <div class="slide-content" style="align-items: center; text-align: center;">
+            <p class="eyebrow reveal">How it works</p>
+            <h2 class="section-title reveal">Seven layers. Three tools. One pipeline.</h2>
+            <div class="flow-svg-wrap reveal-scale">
+                <svg viewBox="0 0 1140 640" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="7-layer pipeline: seed, canary, extract, diff, form, PDF, upload, autofill">
+                    <defs>
+                        <marker id="f-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#2A6B4A"/>
+                        </marker>
+                        <marker id="f-salmon" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#E07A5F"/>
+                        </marker>
+                        <marker id="f-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#8957E5"/>
+                        </marker>
+                    </defs>
+
+                    <!-- ===== ROW 1: User input + Layers 0–3 ===== -->
+
+                    <!-- User upload (parallelogram — user I/O) -->
+                    <polygon points="18,12 142,12 130,140 6,140" fill="#FFFFFF" stroke="#2A6B4A" stroke-width="1.5"/>
+                    <text x="76" y="60" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-size="20" font-weight="600" fill="#1A1A1A">Upload</text>
+                    <text x="76" y="82" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-size="20" font-weight="600" fill="#1A1A1A">target form</text>
+                    <text x="74" y="106" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">Gov form PDF</text>
+                    <rect x="42" y="116" width="66" height="20" rx="10" fill="rgba(42,107,74,0.08)"/>
+                    <text x="75" y="130" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="500" fill="#2A6B4A">NEXT.JS</text>
+
+                    <!-- Arrow User → Layer 0 -->
+                    <line x1="142" y1="76" x2="176" y2="76" stroke="#2A6B4A" stroke-width="2" marker-end="url(#f-green)"/>
+
+                    <!-- Layer 0: Seed (OpenAI) -->
+                    <rect x="178" y="10" width="210" height="140" rx="4" fill="rgba(42,107,74,0.05)" stroke="#2A6B4A" stroke-width="1.5"/>
+                    <circle cx="202" cy="34" r="16" fill="#2A6B4A"/>
+                    <text x="202" y="40" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="14" font-weight="700" fill="#FFF">0</text>
+                    <text x="288" y="58" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-size="20" font-weight="600" fill="#1A1A1A">Seed knowledge graph</text>
+                    <text x="288" y="80" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">GPT-4o reads form definition,</text>
+                    <text x="288" y="96" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">generates per-field extraction goals</text>
+                    <rect x="250" y="114" width="76" height="22" rx="11" fill="rgba(42,107,74,0.08)"/>
+                    <text x="288" y="129" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="500" fill="#2A6B4A">OPENAI</text>
+
+                    <!-- Arrow 0→1 -->
+                    <line x1="388" y1="76" x2="422" y2="76" stroke="#2A6B4A" stroke-width="2" marker-end="url(#f-green)"/>
+
+                    <!-- Layer 1: Canary (TinyFish) -->
+                    <rect x="424" y="10" width="210" height="140" rx="4" fill="rgba(224,122,95,0.04)" stroke="#E07A5F" stroke-width="1.5"/>
+                    <circle cx="448" cy="34" r="16" fill="#E07A5F"/>
+                    <text x="448" y="40" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="14" font-weight="700" fill="#FFF">1</text>
+                    <text x="534" y="58" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-size="20" font-weight="600" fill="#1A1A1A">Canary check</text>
+                    <text x="534" y="80" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">TinyFish fetches ACRA seed page,</text>
+                    <text x="534" y="96" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">hashes nav links for change detection</text>
+                    <rect x="493" y="114" width="82" height="22" rx="11" fill="rgba(224,122,95,0.08)"/>
+                    <text x="534" y="129" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="500" fill="#E07A5F">TINYFISH</text>
+
+                    <!-- Arrow 1→2 -->
+                    <line x1="634" y1="76" x2="668" y2="76" stroke="#2A6B4A" stroke-width="2" marker-end="url(#f-green)"/>
+
+                    <!-- Layer 2: Extract (TinyFish) -->
+                    <rect x="670" y="10" width="210" height="140" rx="4" fill="rgba(224,122,95,0.04)" stroke="#E07A5F" stroke-width="1.5"/>
+                    <circle cx="694" cy="34" r="16" fill="#E07A5F"/>
+                    <text x="694" y="40" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="14" font-weight="700" fill="#FFF">2</text>
+                    <text x="780" y="58" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-size="20" font-weight="600" fill="#1A1A1A">Parallel extraction</text>
+                    <text x="780" y="80" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">Batch of 100 TinyFish agents in stealth</text>
+                    <text x="780" y="96" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">mode. 404 repair via parent URLs.</text>
+                    <rect x="739" y="114" width="82" height="22" rx="11" fill="rgba(224,122,95,0.08)"/>
+                    <text x="780" y="129" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="500" fill="#E07A5F">TINYFISH</text>
+
+                    <!-- Arrow 2→3 -->
+                    <line x1="880" y1="76" x2="914" y2="76" stroke="#2A6B4A" stroke-width="2" marker-end="url(#f-green)"/>
+
+                    <!-- Layer 3: Semantic Diff (OpenAI) -->
+                    <rect x="916" y="10" width="214" height="140" rx="4" fill="rgba(42,107,74,0.05)" stroke="#2A6B4A" stroke-width="1.5"/>
+                    <circle cx="940" cy="34" r="16" fill="#2A6B4A"/>
+                    <text x="940" y="40" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="14" font-weight="700" fill="#FFF">3</text>
+                    <text x="1028" y="58" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-size="20" font-weight="600" fill="#1A1A1A">Semantic diff</text>
+                    <text x="1028" y="80" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">GPT-4o classifies each change:</text>
+                    <text x="1028" y="96" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">material | cosmetic | ambiguous</text>
+                    <rect x="990" y="114" width="76" height="22" rx="11" fill="rgba(42,107,74,0.08)"/>
+                    <text x="1028" y="129" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="500" fill="#2A6B4A">OPENAI</text>
+
+                    <!-- ===== Vertical connector: Row 1 → Row 2 ===== -->
+                    <polyline points="1023,150 1023,180 988,180 988,208" fill="none" stroke="#2A6B4A" stroke-width="2" marker-end="url(#f-green)"/>
+
+                    <!-- ===== ROW 2: Layers 4–5 ===== -->
+
+                    <!-- Layer 4: Confidence scoring (FastAPI logic) -->
+                    <rect x="740" y="210" width="250" height="140" rx="4" fill="rgba(42,107,74,0.05)" stroke="#2A6B4A" stroke-width="1.5"/>
+                    <circle cx="766" cy="234" r="16" fill="#2A6B4A"/>
+                    <text x="766" y="240" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="14" font-weight="700" fill="#FFF">4</text>
+                    <text x="870" y="264" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-size="20" font-weight="600" fill="#1A1A1A">Confidence scoring</text>
+                    <text x="870" y="288" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">Unchanged → high confidence</text>
+                    <text x="870" y="304" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">Material change → review required</text>
+                    <text x="870" y="320" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">Cosmetic → auto-approve</text>
+                    <rect x="835" y="330" width="70" height="22" rx="11" fill="rgba(42,107,74,0.08)"/>
+                    <text x="870" y="345" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="500" fill="#2A6B4A">FASTAPI</text>
+
+                    <!-- Arrow 4→5 -->
+                    <line x1="740" y1="280" x2="552" y2="280" stroke="#2A6B4A" stroke-width="2" marker-end="url(#f-green)"/>
+
+                    <!-- Layer 5: PDF Fill (OpenAI + pypdf) -->
+                    <rect x="300" y="210" width="250" height="140" rx="4" fill="rgba(42,107,74,0.05)" stroke="#2A6B4A" stroke-width="1.5"/>
+                    <circle cx="326" cy="234" r="16" fill="#2A6B4A"/>
+                    <text x="326" y="240" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="14" font-weight="700" fill="#FFF">5</text>
+                    <text x="430" y="264" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-size="20" font-weight="600" fill="#1A1A1A">Fill PDF</text>
+                    <text x="430" y="288" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">GPT-4o maps 5 extracted fields</text>
+                    <text x="430" y="304" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">to 45 PDF AcroForm names.</text>
+                    <text x="430" y="320" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">pypdf writes the filled PDF.</text>
+                    <rect x="380" y="330" width="100" height="22" rx="11" fill="rgba(42,107,74,0.08)"/>
+                    <text x="430" y="345" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="500" fill="#2A6B4A">OPENAI + PYPDF</text>
+
+                    <!-- Arrow 5→6 -->
+                    <line x1="425" y1="352" x2="425" y2="408" stroke="#8957E5" stroke-width="2" marker-end="url(#f-purple)"/>
+
+                    <!-- ===== ROW 3: Layers 6–7 ===== -->
+
+                    <!-- Layer 6: Upload to GitHub -->
+                    <rect x="300" y="410" width="250" height="120" rx="4" fill="rgba(137,87,229,0.04)" stroke="#8957E5" stroke-width="1.5"/>
+                    <circle cx="326" cy="434" r="16" fill="#8957E5"/>
+                    <text x="326" y="440" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="14" font-weight="700" fill="#FFF">6</text>
+                    <text x="430" y="462" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-size="20" font-weight="600" fill="#1A1A1A">Upload to GitHub</text>
+                    <text x="430" y="486" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">Push filled PDF via GitHub Contents API.</text>
+                    <text x="430" y="502" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">Returns raw.githubusercontent.com URL.</text>
+                    <rect x="396" y="510" width="68" height="22" rx="11" fill="rgba(137,87,229,0.08)"/>
+                    <text x="430" y="525" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="500" fill="#8957E5">GITHUB</text>
+
+                    <!-- Arrow 6→7 -->
+                    <line x1="550" y1="470" x2="598" y2="470" stroke="#E07A5F" stroke-width="2" marker-end="url(#f-salmon)"/>
+
+                    <!-- Layer 7: Autofill (TinyFish) -->
+                    <rect x="600" y="410" width="340" height="120" rx="4" fill="rgba(224,122,95,0.04)" stroke="#E07A5F" stroke-width="1.5"/>
+                    <circle cx="626" cy="434" r="16" fill="#E07A5F"/>
+                    <text x="626" y="440" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="14" font-weight="700" fill="#FFF">7</text>
+                    <text x="775" y="462" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-size="20" font-weight="600" fill="#1A1A1A">Autofill BizFile+ form</text>
+                    <text x="775" y="486" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">TinyFish navigates portal, fills fields,</text>
+                    <text x="775" y="502" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">downloads PDF from GitHub URL, uploads to form.</text>
+                    <rect x="734" y="510" width="82" height="22" rx="11" fill="rgba(224,122,95,0.08)"/>
+                    <text x="775" y="525" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="500" fill="#E07A5F">TINYFISH</text>
+
+                    <!-- ===== Final output ===== -->
+                    <line x1="770" y1="530" x2="770" y2="573" stroke="#2A6B4A" stroke-width="2" marker-end="url(#f-green)"/>
+                    <rect x="600" y="575" width="340" height="50" rx="14" fill="#FFF" stroke="#2A6B4A" stroke-width="1.5"/>
+                    <text x="770" y="598" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-size="18" font-weight="600" fill="#1A1A1A">Present for human review</text>
+                    <text x="770" y="617" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">Fields with confidence scores + change flags</text>
+
+                    <!-- ===== Legend ===== -->
+                    <rect x="10" y="560" width="220" height="70" rx="10" fill="rgba(0,0,0,0.02)" stroke="rgba(0,0,0,0.06)" stroke-width="1"/>
+                    <circle cx="30" cy="580" r="6" fill="#2A6B4A"/>
+                    <text x="44" y="584" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">OpenAI / FastAPI</text>
+                    <circle cx="30" cy="600" r="6" fill="#E07A5F"/>
+                    <text x="44" y="604" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">TinyFish (browser agent)</text>
+                    <circle cx="30" cy="620" r="6" fill="#8957E5"/>
+                    <text x="44" y="624" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#4A4A4A">GitHub (PDF bridge)</text>
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         SLIDE 8: VIDEO DEMO PLACEHOLDER
+         ========================================== -->
+    <section class="slide slide-cream">
+        <div class="slide-content" style="align-items: center; text-align: center;">
+            <p class="eyebrow reveal">See it in action</p>
+            <h2 class="section-title reveal">From rule change to filed form<br>in 20 minutes.</h2>
+            <div class="demo-frame reveal-scale">
+                <div class="play-btn">
+                    <svg viewBox="0 0 24 24"><polygon points="8,5 20,12 8,19"/></svg>
+                </div>
+                <div class="demo-label">Live product demo &middot; ACRA withdrawal from approved liquidators</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         SLIDE 9: MARKET OPPORTUNITY
+         ========================================== -->
+    <section class="slide slide-warm">
+        <div class="slide-content">
+            <p class="eyebrow reveal">Market opportunity</p>
+            <h2 class="section-title reveal">A well-timed niche play with<br>clear unit economics.</h2>
+            <div class="market-grid">
+                <div class="content-card reveal">
+                    <i data-lucide="building-2" class="lucide-icon"></i>
+                    <div class="stat-number" style="font-size: clamp(1.5rem, 3.5vw, 2.5rem);">1,500–2,000</div>
+                    <h3>Singapore firms</h3>
+                    <p>CSPs, tax agents, immigration consultancies. S$100K MRR target: 67–125 customers at S$800–1,500 ARPU. <a href="https://www.acra.gov.sg/corporate-service-providers" target="_blank" rel="noopener" class="source-link">ACRA</a></p>
+                </div>
+                <div class="content-card reveal">
+                    <i data-lucide="trending-up" class="lucide-icon"></i>
+                    <div class="stat-number green" style="font-size: clamp(1.5rem, 3.5vw, 2.5rem);">16.7% CAGR</div>
+                    <h3>RegTech growth</h3>
+                    <p>Singapore RegTech market: US$179M (2024) → US$386M (2029). APAC expansion to Hong Kong &amp; Malaysia by month 18. <a href="https://www.globenewswire.com/news-release/2024/10/11/2961864/0/en/Singapore-RegTech-Business-and-Investment-Opportunities-Databook-2024-16-7-CAGR-Forecast-Duing-2024-2029-with-Singapore-s-Regtech-Industry-Set-to-Reach-US-386-48-Million-by-2029.html" target="_blank" rel="noopener" class="source-link">ResearchAndMarkets 2024</a></p>
+                </div>
+                <div class="content-card reveal">
+                    <i data-lucide="globe" class="lucide-icon"></i>
+                    <div class="stat-number" style="font-size: clamp(1.5rem, 3.5vw, 2.5rem); color: var(--salmon);">-34% / -82%</div>
+                    <h3>A global problem</h3>
+                    <p>APAC FIs face high costs from manual processes. RegTech cuts audit costs by 34% and onboarding time by 82%. <a href="https://resources.fenergo.com/case-studies/crm-and-clm-integration-for-faster-kyc-and-onboarding" target="_blank" rel="noopener" class="source-link">Fenergo</a></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         SLIDE 10: FUTURE IMPROVEMENTS
+         ========================================== -->
+    <section class="slide slide-cream">
+        <div class="slide-content">
+            <p class="eyebrow reveal">What's next</p>
+            <h2 class="section-title reveal">The roadmap beyond launch.</h2>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(0.5rem, 1.5vw, 1.25rem); margin-top: var(--content-gap);">
+                <div class="content-card reveal">
+                    <i data-lucide="git-branch" class="lucide-icon"></i>
+                    <h3>Cross-agency mapping</h3>
+                    <p>Dependency tracking across agencies — when one agency's change affects another's filing requirements.</p>
+                </div>
+                <div class="content-card reveal">
+                    <i data-lucide="plug" class="lucide-icon"></i>
+                    <h3>Government portal integration</h3>
+                    <p>Direct submission to government filing portals. File without leaving Sigma Tech.</p>
+                </div>
+                <div class="content-card reveal">
+                    <i data-lucide="globe" class="lucide-icon"></i>
+                    <h3>APAC expansion</h3>
+                    <p>Hong Kong and Malaysia by month 18. Same architecture, new regulatory sources.</p>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: clamp(0.5rem, 1.5vw, 1.25rem); max-width: 66%; margin: clamp(0.5rem, 1.5vw, 1.25rem) auto 0;">
+                <div class="content-card reveal">
+                    <i data-lucide="file-plus" class="lucide-icon"></i>
+                    <h3>More filing types</h3>
+                    <p>Beyond annual returns: EP applications, tax filings, AML/CFT returns.</p>
+                </div>
+                <div class="content-card reveal">
+                    <i data-lucide="brain" class="lucide-icon"></i>
+                    <h3>AI corporate intelligence advisor</h3>
+                    <p>Natural language queries about regulatory obligations for any client entity.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         SLIDE 11: THANK YOU
+         ========================================== -->
+    <section class="slide slide-cta">
+        <div class="slide-content cta-content">
+            <p class="eyebrow reveal">Thank you</p>
+            <h2 class="display-title reveal" style="text-align: center; max-width: 700px;">Sigma Tech<span style="color: rgba(42,107,74,0.6);">.</span></h2>
+            <div class="divider reveal" style="margin: 0 auto;"></div>
+            <p class="subtitle reveal" style="text-align: center; max-width: 520px;">Corporate intelligence for Singapore.<br>Stop re-reading circulars. Start advising clients.</p>
+            <p class="jp-accent jp-large center reveal" style="margin-top: clamp(0.5rem, 2vw, 2rem);">迅速 · 正確 · 簡素</p>
+            <p class="cta-meta reveal">Built with TinyFish, OpenAI GPT-4o, FastAPI, Next.js and SQLite</p>
+        </div>
+    </section>
+
+    <!-- ==========================================
+       JAVASCRIPT: Slide Presentation Controller
+       ========================================== -->
+    <script>
+        class SlidePresentation {
+            constructor() {
+                this.slides = document.querySelectorAll('.slide');
+                this.currentSlide = 0;
+                this.isAnimating = false;
+
+                this.setupIntersectionObserver();
+                this.setupKeyboardNav();
+                this.setupTouchNav();
+                this.setupMouseWheel();
+                this.setupProgressBar();
+                this.setupNavDots();
+            }
+
+            setupIntersectionObserver() {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                            this.updateCurrentSlide(entry.target);
+                        }
+                    });
+                }, { threshold: 0.5 });
+
+                this.slides.forEach(slide => observer.observe(slide));
+            }
+
+            updateCurrentSlide(slideEl) {
+                const index = Array.from(this.slides).indexOf(slideEl);
+                if (index !== -1) {
+                    this.currentSlide = index;
+                    this.updateProgressBar();
+                    this.updateNavDots();
+                }
+            }
+
+            setupKeyboardNav() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+                        e.preventDefault();
+                        this.goToSlide(this.currentSlide + 1);
+                    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                        e.preventDefault();
+                        this.goToSlide(this.currentSlide - 1);
+                    } else if (e.key === 'Home') {
+                        e.preventDefault();
+                        this.goToSlide(0);
+                    } else if (e.key === 'End') {
+                        e.preventDefault();
+                        this.goToSlide(this.slides.length - 1);
+                    }
+                });
+            }
+
+            setupTouchNav() {
+                let touchStartY = 0;
+                let touchStartX = 0;
+
+                document.addEventListener('touchstart', (e) => {
+                    touchStartY = e.touches[0].clientY;
+                    touchStartX = e.touches[0].clientX;
+                }, { passive: true });
+
+                document.addEventListener('touchend', (e) => {
+                    const deltaY = touchStartY - e.changedTouches[0].clientY;
+                    const deltaX = touchStartX - e.changedTouches[0].clientX;
+
+                    if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 50) {
+                        if (deltaY > 0) {
+                            this.goToSlide(this.currentSlide + 1);
+                        } else {
+                            this.goToSlide(this.currentSlide - 1);
+                        }
+                    }
+                }, { passive: true });
+            }
+
+            setupMouseWheel() {
+                let lastWheel = 0;
+                document.addEventListener('wheel', (e) => {
+                    const now = Date.now();
+                    if (now - lastWheel < 800) return;
+                    lastWheel = now;
+
+                    if (e.deltaY > 0) {
+                        this.goToSlide(this.currentSlide + 1);
+                    } else if (e.deltaY < 0) {
+                        this.goToSlide(this.currentSlide - 1);
+                    }
+                }, { passive: true });
+            }
+
+            setupProgressBar() {
+                this.progressBar = document.getElementById('progressBar');
+                this.updateProgressBar();
+            }
+
+            updateProgressBar() {
+                if (this.progressBar) {
+                    const progress = ((this.currentSlide + 1) / this.slides.length) * 100;
+                    this.progressBar.style.width = progress + '%';
+                }
+            }
+
+            setupNavDots() {
+                const container = document.getElementById('navDots');
+                if (!container) return;
+
+                this.slides.forEach((_, i) => {
+                    const dot = document.createElement('button');
+                    dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+                    dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+                    dot.addEventListener('click', () => this.goToSlide(i));
+                    container.appendChild(dot);
+                });
+
+                this.navDotEls = container.querySelectorAll('.nav-dot');
+            }
+
+            updateNavDots() {
+                if (!this.navDotEls) return;
+                this.navDotEls.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === this.currentSlide);
+                });
+            }
+
+            goToSlide(index) {
+                if (index < 0 || index >= this.slides.length) return;
+                this.slides[index].scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        const presentation = new SlidePresentation();
+        lucide.createIcons();
+    </script>
+</body>
+</html>
