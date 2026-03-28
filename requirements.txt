@@ -4,3 +4,6 @@ httpx
 openai
 pypdf
 reportlab
+fastapi
+uvicorn
+sse-starlette

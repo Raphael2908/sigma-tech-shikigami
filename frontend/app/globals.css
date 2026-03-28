@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #f4f1e8;
+  --panel: #fffdf8;
+  --panel-2: #f8f4eb;
+  --text: #171717;
+  --muted: #6b6b6b;
+  --line: #ddd6c8;
+  --accent: #1f5cff;
+  --accent-soft: rgba(31, 92, 255, 0.08);
+  --warn: #b85b3d;
+  --warn-soft: rgba(184, 91, 61, 0.10);
+  --ok: #2b7a61;
+  --ok-soft: rgba(43, 122, 97, 0.10);
+  --review: #9c7a2d;
+  --review-soft: rgba(156, 122, 45, 0.12);
+}
+
+html, body { height: 100%; }
+
+body {
+  background: linear-gradient(180deg, #f7f4ed, #eee7db);
+  color: var(--text);
+}

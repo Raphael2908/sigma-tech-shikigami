@@ -3,8 +3,8 @@
 A compliance automation system that extracts regulatory data from government websites, maintains a versioned knowledge graph, and auto-fills compliance forms with confidence scoring.
 
 **Current target:** ACRA (Accounting and Corporate Regulatory Authority) — Withdrawal from Being Approved Liquidators
-**Stack:** Python, TinyFish (web extraction), OpenAI (reasoning), SQLite (knowledge graph)
-**Status:** Phase 10 (frontend integration) complete. PDF fill + GitHub upload + TinyFish autofill wired.
+**Stack:** FastAPI + Next.js (TypeScript/Tailwind), TinyFish (web extraction), OpenAI (reasoning), SQLite (knowledge graph)
+**Status:** Phase 11 (FastAPI + Next.js migration) complete. Full-stack app with API endpoints and React frontend.
 
 ---
 
@@ -51,10 +51,27 @@ TINYFISH/
 │   ├── test_pdf_fill.py       # Phase 10: PDF filling (mocked OpenAI)
 │   ├── test_upload.py         # Phase 10: GitHub upload (mocked httpx)
 │   └── test_autofill.py       # Phase 10: TinyFish autofill (mocked)
-├── run.py                     # Main orchestration: python run.py [form_path]
+├── api/
+│   ├── __init__.py
+│   └── main.py                # FastAPI app: /api/health, /api/payload, /api/pipeline/run, /api/pipeline/stream
+├── frontend/                  # Next.js 16 + TypeScript + Tailwind
+│   ├── app/
+│   │   ├── layout.tsx         # Root layout (Plus Jakarta Sans + JetBrains Mono)
+│   │   ├── globals.css        # CSS variables (design system from Regulator demo)
+│   │   ├── page.tsx           # Dashboard page (stats + workflows table)
+│   │   ├── client/page.tsx    # Client flow (5-step wizard: changes→upload→review→fill→done)
+│   │   └── portal/
+│   │       ├── layout.tsx     # BizFile+ portal shell (header, nav, footer)
+│   │       ├── form/page.tsx  # Mock BizFile+ form entry
+│   │       └── review/page.tsx # Mock BizFile+ review + completion
+│   ├── components/
+│   │   └── Sidebar.tsx        # Navigation sidebar
+│   └── lib/
+│       └── api.ts             # API client (fetchPayload, runPipeline, streamPipeline)
+├── run.py                     # CLI orchestration: python run.py [form_path]
 ├── config.py                  # API keys, constants (dotenv)
 ├── sample_form.json           # ACRA withdrawal form definition (5 fields)
-├── requirements.txt           # aiosqlite, python-dotenv, httpx, openai
+├── requirements.txt           # aiosqlite, python-dotenv, httpx, openai, fastapi, uvicorn
 ├── .env                       # API keys (not committed)
 └── .gitignore
 ```
@@ -169,6 +186,14 @@ no node for field     → missing,         review: True
 - Autofill goal is concrete step-by-step instructions (not abstract) for reliable browser automation
 - GITHUB_REPO constant in config.py (jeromepaulteoh/Shikigami)
 - Frontend payload generated as both JSON and JS (window.REGULATOR_PAYLOAD) from pipeline output
+- FastAPI wraps existing async layers as API endpoints — layers unchanged
+- CORS allows localhost:3000 (Next.js dev server)
+- SSE endpoint (/api/pipeline/stream) sends per-step progress events
+- Next.js 16 with App Router, TypeScript, Tailwind CSS
+- Design system ported from Regulator_Demo_Tinyfish.html CSS variables
+- Dashboard (/) and Client flow (/client) pages fetch from FastAPI /api/payload
+- Portal pages (/portal/form, /portal/review) use sessionStorage for BizFile+ mock flow
+- Fallback data in frontend for when API is unavailable (demo resilience)
 
 ---
 
@@ -181,10 +206,20 @@ no node for field     → missing,         review: True
 4. Pipeline wired: fill_form → fill_pdf → upload_to_github → run_autofill
 5. Frontend payload generation from live pipeline output (frontend_payload.js)
 
+## Completed Phase: FastAPI + Next.js Migration (Phase 11)
+
+**What was built:**
+1. `api/main.py` — FastAPI app with 5 endpoints (health, payload, pipeline/run, pipeline/stream, form-definition)
+2. `frontend/` — Next.js 16 app with TypeScript + Tailwind CSS
+3. Dashboard page (`/`) — stats cards + monitored workflows table
+4. Client flow page (`/client`) — 5-step wizard (changes → upload → review → simulate fill → done)
+5. Portal pages (`/portal/form`, `/portal/review`) — BizFile+ mock with sessionStorage
+
 **Demo run:**
-1. Start local server: `python -m http.server 8080 --directory data`
-2. Run pipeline: `python run.py sample_form.json`
-3. Open `Regulator_Demo_Tinyfish.html` to see the demo flow
+1. Start FastAPI: `cd TinyFish_2026 && ./venv/Scripts/uvicorn api.main:app --port 8000`
+2. Start Next.js: `cd frontend && npm run dev`
+3. Open `http://localhost:3000` for the Regulator dashboard
+4. Open `http://localhost:3000/portal/form` for the BizFile+ mock
 
 ---
 
