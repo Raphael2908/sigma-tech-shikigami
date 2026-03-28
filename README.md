@@ -17,7 +17,7 @@ When a user uploads a target compliance form, the pipeline reads it, crawls the 
 
 ## System Architecture
 
-![System architecture: OpenAI drives TinyFish, TinyFish feeds OpenAI](architecture.png)
+![System architecture: OpenAI drives TinyFish, TinyFish feeds OpenAI](architecure.png)
 
 ## Presentation
 
