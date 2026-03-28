@@ -15,6 +15,10 @@ The system connects three tools in a loop: OpenAI reasons about what information
 
 When a user uploads a target compliance form, the pipeline reads it, crawls the relevant agency pages, compares what it finds against stored baselines, classifies changes as material or cosmetic, fills the PDF with extracted data, and submits it through the government portal — flagging anything that needs human review. The first target is ACRA's BizFile+ portal for corporate filings, with expansion to MAS, MOM, IRAS, and ICA. It replaces the 40 minutes of manual research a compliance professional does before every filing or advice session.
 
+## System Architecture
+
+![System architecture: OpenAI drives TinyFish, TinyFish feeds OpenAI](architecture.png)
+
 ## Presentation
 
 - [Pitch Deck (HTML)](sigma-tech.html)
