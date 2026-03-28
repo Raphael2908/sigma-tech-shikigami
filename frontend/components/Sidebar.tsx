@@ -11,7 +11,7 @@ export default function Sidebar() {
   return (
     <aside className="w-[248px] bg-white border-r border-[var(--line)] p-[18px_14px] flex flex-col gap-[18px] shrink-0">
       <div className="text-[30px] font-serif px-2 pb-4 border-b border-[var(--line)]" style={{ fontFamily: "Georgia, serif" }}>
-        Regulator.
+        Sigma Tech.
       </div>
 
       <div className="flex flex-col gap-1.5">
