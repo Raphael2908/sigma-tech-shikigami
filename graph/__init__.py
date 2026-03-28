@@ -6,6 +6,7 @@ from graph.store import (
     get_node,
     get_nodes_by_form_fields,
     save_version,
+    get_prior_version,
     get_meta,
     set_meta,
 )

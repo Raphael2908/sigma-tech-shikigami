@@ -245,6 +245,15 @@ class DiffResult:
     current_json: dict
 ```
 
+Implementation notes:
+- semantic_diff(changed_results, db_path?) -> list[DiffResult]
+- Prior JSON retrieved from node_versions via new get_prior_version(node_id, db_path?) in store.py (ORDER BY id DESC OFFSET 1)
+- First-time extractions (prior_hash=None): returns synthetic "material" DiffResult, skips OpenAI call
+- Diffs run in parallel via asyncio.gather with return_exceptions=True
+- On OpenAI failure: falls back to change_type="ambiguous" (conservative, surfaces for review)
+- DiffResult dataclass lives in layer3_diff.py (transient, same pattern as ExtractionResult)
+- Mocking note: must patch diff_module.chat_json not openai_module.chat_json (import-by-name binding)
+
 ---
 
 ## Phase 7 — Layer 4: Form Filling
@@ -342,3 +351,7 @@ Note: asyncio is stdlib, not a pip package — removed from requirements.
 - Error results: only last_extracted_at updated, content_hash/json preserved (same pattern as canary)
 - save_version called for all successful extractions (unchanged + changed) for full audit trail
 - Batch chunked at 100 to respect TinyFish API limit
+- get_prior_version in store.py uses ORDER BY id DESC OFFSET 1 (id tiebreaker, not timestamp)
+- First-time extractions skip OpenAI diff, return synthetic "material" DiffResult
+- OpenAI diff failures fall back to "ambiguous" (conservative for human review)
+- Monkeypatching import-by-name: patch the consuming module's reference, not the source module

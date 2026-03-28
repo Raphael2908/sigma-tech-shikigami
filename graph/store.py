@@ -106,6 +106,21 @@ async def save_version(node_id: int, hash: str, json_str: str, db_path: str | No
         await db.commit()
 
 
+async def get_prior_version(node_id: int, db_path: str | None = None) -> str | None:
+    """Get the second-most-recent extracted_json from node_versions.
+
+    Returns None if fewer than 2 versions exist.
+    """
+    db_path = await _get_db_path(db_path)
+    async with aiosqlite.connect(db_path) as db:
+        async with db.execute(
+            "SELECT extracted_json FROM node_versions WHERE node_id = ? ORDER BY id DESC LIMIT 1 OFFSET 1",
+            (node_id,),
+        ) as cursor:
+            row = await cursor.fetchone()
+            return row[0] if row else None
+
+
 async def get_meta(key: str, db_path: str | None = None) -> str | None:
     db_path = await _get_db_path(db_path)
     async with aiosqlite.connect(db_path) as db:
