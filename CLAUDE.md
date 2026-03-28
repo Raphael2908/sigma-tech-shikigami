@@ -169,6 +169,13 @@ Always returns and allows the run to proceed
 If changed: log a warning, queue maintenance (for MVP just print "MAINTENANCE NEEDED")
 Store hash under key "canary_hash" in graph_meta
 
+Implementation notes:
+- check_canary(db_path?) -> {"status": "stable"|"changed", "should_block": False}
+- First run (no stored hash): returns "stable" and stores baseline — no false alarm
+- On TinyFish fetch error: returns "changed" but does NOT update stored hash
+- hash_json() utility lives in graph/utils.py (reused by layer2_extract)
+- Re-exported from graph/__init__.py
+
 
 Phase 5 — Layer 2: Parallel Extraction
 Goal: Fan out TinyFish across all relevant nodes, hash triage results.
@@ -318,3 +325,7 @@ Note: asyncio is stdlib, not a pip package — removed from requirements.
 - run_batch uses /run-batch + GET /runs/{id} polling (5s interval, 300s timeout)
 - OpenAI chat_json() strips markdown fences, uses temperature=0, lazy singleton client
 - Tests use separate test_regflow.db with cleanup in finally block
+- hash_json(data) in graph/utils.py — SHA-256 of json.dumps(sort_keys=True), shared by canary + extraction
+- Canary first run = "stable" (baseline establishment, not false alarm)
+- Canary on fetch error = "changed" but stored hash preserved (no corrupt baseline)
+- Tests mock TinyFishClient.run_single via monkeypatch for fast offline testing

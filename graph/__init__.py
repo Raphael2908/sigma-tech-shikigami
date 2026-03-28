@@ -1,4 +1,5 @@
 from graph.models import Node
+from graph.utils import hash_json
 from graph.store import (
     init_db,
     upsert_node,
